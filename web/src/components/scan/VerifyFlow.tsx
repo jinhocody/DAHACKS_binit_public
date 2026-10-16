@@ -11,7 +11,7 @@ import { ScanningOverlay } from "./ScanningOverlay";
 
 type Slot = "bin" | "inside";
 
-/** After a wrong-bin deduction, show the result this long, then go back to the home page. */
+/** When verification fails and no tries are left, show the result this long, then go back to the home page. */
 const HOME_REDIRECT_MS = 3000;
 type Photo = { blob: Blob; url: string };
 
@@ -97,13 +97,17 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
     setStatus("idle");
   }
 
-  // Wrong bin: points were deducted, so end this attempt and return home.
+  // Wrong bin: points were deducted, so this attempt ends; closing the sad-mascot popup goes home.
   const wrongBin = Boolean(result?.penalty);
+  // Any other failed verdict gets one more try; after that, go home. "AI busy" results don't use up tries.
+  const outOfTries = Boolean(
+    result && !result.verified && !result.retryable && !wrongBin && attempts >= VERIFY_MAX_ATTEMPTS,
+  );
   useEffect(() => {
-    if (!wrongBin) return;
+    if (!outOfTries) return;
     const timer = window.setTimeout(() => router.push("/"), HOME_REDIRECT_MS);
     return () => window.clearTimeout(timer);
-  }, [wrongBin, router]);
+  }, [outOfTries, router]);
 
   const checking = status === "checking";
   const nextSlot: Slot | null = !photos.bin ? "bin" : !photos.inside ? "inside" : null;
@@ -182,7 +186,10 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
           removed={penalty.points}
           total={penalty.total}
           correctBin={BINS[category] ?? "right bin"}
-          onClose={() => setSadDismissedFor(result)}
+          onClose={() => {
+            setSadDismissedFor(result);
+            router.push("/");
+          }}
         />
       )}
 
@@ -215,7 +222,8 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
               Total: {penalty.total}
             </p>
           )}
-          {wrongBin && <p className="mt-2 text-xs">Taking you back to the home page…</p>}
+          {wrongBin && <p className="mt-2 text-xs">Close the message to go back to the home page.</p>}
+          {outOfTries && <p className="mt-2 text-xs">No tries left — taking you back to the home page…</p>}
           {canRetry && (
             <button
               type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
 import type { ScanError, ScanResult } from "@/lib/scan-types";
 import { LiveCamera } from "./LiveCamera";
 import { resizeImage } from "./resize-image";
@@ -33,6 +33,21 @@ export function Scanner() {
   useEffect(() => () => {
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
   }, []);
+
+  // Next.js keeps this page alive (hidden) after navigating away. Start fresh next time instead of
+  // showing the old result, which could also re-trigger the "go back home" redirect.
+  useLayoutEffect(
+    () => () => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+      previewRef.current = null;
+      setPreviewUrl(null);
+      setLastBlob(null);
+      setResult(null);
+      setError(null);
+      setStatus("idle");
+    },
+    [],
+  );
 
   function setPreview(url: string | null) {
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);

@@ -93,7 +93,7 @@ function ShopItem({
   onAction: (item: Accessory, state: ItemState) => void;
 }) {
   const state = itemState(item, shop);
-  const missing = ACCESSORY_PRICE - shop.balance;
+  const missing = ACCESSORY_PRICE - shop.spendable; // counts back up from below 0 too
   const button = {
     wearing: { text: "Wearing ✓", className: "bg-emerald-600 text-white hover:bg-emerald-700" },
     wear: { text: "Wear", className: "bg-white text-emerald-800 ring-1 ring-emerald-300 hover:bg-emerald-50" },

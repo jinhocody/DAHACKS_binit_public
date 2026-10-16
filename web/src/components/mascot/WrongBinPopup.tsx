@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { SadMascot } from "./SadMascot";
 
 interface WrongBinPopupProps {
-  /** Points actually removed (0 when there were none left or this scan was already penalized). */
+  /** Points actually removed (0 when this scan was already penalized). */
   removed: number;
   total: number;
   /** Where the item should have gone, e.g. "Blue recycling cart". */

@@ -20,7 +20,7 @@ interface PointsState {
 }
 
 export interface PenaltyOutcome {
-  /** Points actually removed (0 when this scan was already penalized or the total was 0). */
+  /** Points actually removed (0 when this scan was already penalized). */
   points: number;
   total: number;
 }
@@ -99,11 +99,11 @@ export function awardVerified(points: number, ticketId: string, photoHashes: str
   return { status: "awarded", points: allowed, total: next.total, capped: allowed < points };
 }
 
-/** Removes points for a wrong-bin disposal, at most once per scan and never below 0. */
+/** Removes points for a wrong-bin disposal, at most once per scan. The total can go below 0. */
 export function deductWrongBin(points: number, ticketId: string): PenaltyOutcome {
   const state = load();
   if (state.penalizedTicketIds.includes(ticketId)) return { points: 0, total: state.total };
-  const removed = Math.min(points, state.total);
+  const removed = points;
   const next: PointsState = {
     ...state,
     total: state.total - removed,

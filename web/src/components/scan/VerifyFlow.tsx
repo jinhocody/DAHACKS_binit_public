@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { BinCategory, VerifyResult } from "@/lib/scan-types";
 import { BINS, DAILY_POINT_CAP, VERIFY_MAX_ATTEMPTS, VERIFY_WINDOW_MINUTES, WRONG_BIN_PENALTY } from "@/lib/sorting-config";
 import { awardVerified, deductWrongBin, hashPhoto, type AwardOutcome, type PenaltyOutcome } from "./points-store";
-import { resizeImage } from "./resize-image";
+import { LiveCamera } from "./LiveCamera";
 
 type Slot = "bin" | "inside";
 type Photo = { blob: Blob; url: string };
@@ -38,47 +38,40 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
   const [penalty, setPenalty] = useState<PenaltyOutcome | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const inputs = { bin: useRef<HTMLInputElement>(null), inside: useRef<HTMLInputElement>(null) };
   const urlsRef = useRef<string[]>([]);
 
   // Release preview URLs on unmount.
   useEffect(() => () => urlsRef.current.forEach((u) => URL.revokeObjectURL(u)), []);
 
-  async function onPick(slot: Slot, e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("That file isn't an image. Please take a photo.");
-      return;
-    }
+  // Photos come only from the live camera, so gallery or downloaded pictures can't earn points.
+  function setPhoto(slot: Slot, blob: Blob) {
+    const url = URL.createObjectURL(blob);
+    urlsRef.current.push(url);
+    const next = { ...photos, [slot]: { blob, url } };
+    setPhotos(next);
     setError(null);
-    try {
-      const blob = await resizeImage(file);
-      const url = URL.createObjectURL(blob);
-      urlsRef.current.push(url);
-      setPhotos((p) => ({ ...p, [slot]: { blob, url } }));
-    } catch {
-      setError("Couldn't read that photo. Try again.");
-    }
+    if (next.bin && next.inside) submit(next.bin, next.inside);
   }
 
-  async function submit() {
-    if (!photos.bin || !photos.inside) return;
+  function retake(slot: Slot) {
+    setPhotos((p) => ({ ...p, [slot]: null }));
+  }
+
+  async function submit(bin: Photo, inside: Photo) {
     setStatus("checking");
     setError(null);
     try {
       const body = new FormData();
       body.append("ticket", ticket);
-      body.append("binPhoto", photos.bin.blob, "bin.jpg");
-      body.append("insidePhoto", photos.inside.blob, "inside.jpg");
+      body.append("binPhoto", bin.blob, "bin.jpg");
+      body.append("insidePhoto", inside.blob, "inside.jpg");
       const res = await fetch("/api/verify", { method: "POST", body });
       const data = (await res.json().catch(() => null)) as VerifyResult | null;
       if (!data || typeof data.verified !== "boolean") throw new Error(`Verification failed (HTTP ${res.status}).`);
 
       if (!data.retryable) setAttempts((n) => n + 1);
       if (data.verified && data.ticketId) {
-        const hashes = await Promise.all([hashPhoto(photos.bin.blob), hashPhoto(photos.inside.blob)]);
+        const hashes = await Promise.all([hashPhoto(bin.blob), hashPhoto(inside.blob)]);
         setAward(awardVerified(data.points, data.ticketId, scanPhotoHash ? [scanPhotoHash, ...hashes] : hashes));
       }
       setPenalty(data.penalty && data.ticketId ? deductWrongBin(data.penalty, data.ticketId) : null);
@@ -97,6 +90,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
   }
 
   const checking = status === "checking";
+  const nextSlot: Slot | null = !photos.bin ? "bin" : !photos.inside ? "inside" : null;
   const canRetry = result && !result.verified && (result.retryable || attempts < VERIFY_MAX_ATTEMPTS);
 
   return (
@@ -110,54 +104,66 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
       {status !== "done" && (
         <>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {SLOTS.map(({ key, title, hint }) => {
+            {SLOTS.map(({ key, title }) => {
               const photo = photos[key];
               return (
-                <div key={key} className="min-w-0">
-                  <input
-                    ref={inputs[key]}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="sr-only"
-                    tabIndex={-1}
-                    aria-hidden
-                    onChange={(e) => onPick(key, e)}
-                    disabled={checking}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => inputs[key].current?.click()}
-                    disabled={checking}
-                    className="flex aspect-square w-full flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed border-emerald-300 bg-white p-2 text-center text-emerald-900 transition hover:bg-emerald-50 disabled:opacity-60"
-                  >
-                    {photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- local blob preview
-                      <img src={photo.url} alt={title} className="h-full w-full rounded-lg object-cover" />
-                    ) : (
-                      <>
-                        <span className="text-3xl" aria-hidden>
-                          📷
-                        </span>
-                        <span className="text-sm font-semibold">{title}</span>
-                        <span className="text-xs text-emerald-800/80">{hint}</span>
-                      </>
-                    )}
-                  </button>
-                  {photo && <p className="mt-1 truncate text-center text-xs text-emerald-900">{title} ✓ (tap to retake)</p>}
+                <div
+                  key={key}
+                  className={`min-w-0 rounded-xl border-2 p-1.5 text-center text-xs ${
+                    photo ? "border-emerald-400 bg-white" : key === nextSlot ? "border-emerald-500 bg-emerald-100" : "border-dashed border-emerald-200 bg-white/60"
+                  }`}
+                >
+                  {photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- local blob preview
+                    <img src={photo.url} alt={title} className="aspect-[4/3] w-full rounded-lg object-cover" />
+                  ) : (
+                    <div className="flex aspect-[4/3] w-full items-center justify-center text-2xl" aria-hidden>
+                      📷
+                    </div>
+                  )}
+                  <p className="mt-1 truncate font-semibold text-emerald-950">{title}</p>
+                  {photo && !checking && (
+                    <button type="button" onClick={() => retake(key)} className="mt-0.5 min-h-8 text-emerald-800 underline">
+                      Retake
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          <button
-            type="button"
-            onClick={submit}
-            disabled={!photos.bin || !photos.inside || checking}
-            className="mt-3 min-h-12 w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {checking ? "Checking your bin…" : "Check my sorting"}
-          </button>
+          {nextSlot && !checking && (
+            <div className="mt-3">
+              <LiveCamera
+                key={nextSlot}
+                guide={SLOTS.find((s) => s.key === nextSlot)!.hint}
+                onCapture={(blob) => setPhoto(nextSlot, blob)}
+                fallback={
+                  <p className="rounded-xl bg-white p-3 text-sm text-emerald-950 ring-1 ring-emerald-200">
+                    Verification needs live camera access, so photos from your gallery can&apos;t be used. Open this page
+                    on your phone and allow the camera.
+                  </p>
+                }
+              />
+            </div>
+          )}
+
+          {checking && (
+            <p role="status" className="mt-3 flex items-center justify-center gap-2 text-sm font-medium text-emerald-900">
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-300 border-t-emerald-700" aria-hidden />
+              Checking your bin…
+            </p>
+          )}
+
+          {!nextSlot && !checking && photos.bin && photos.inside && (
+            <button
+              type="button"
+              onClick={() => submit(photos.bin!, photos.inside!)}
+              className="mt-3 min-h-12 w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700"
+            >
+              Check my sorting
+            </button>
+          )}
         </>
       )}
 

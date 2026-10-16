@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import type { ScanError, ScanResult } from "@/lib/scan-types";
+import { LiveCamera } from "./LiveCamera";
 import { resizeImage } from "./resize-image";
 import { ScanResultCard } from "./ScanResultCard";
 import { hashPhoto } from "./points-store";
@@ -112,6 +113,12 @@ export function Scanner() {
     }
   }
 
+  async function onCameraCapture(blob: Blob) {
+    setPreview(URL.createObjectURL(blob));
+    setLastBlob(blob);
+    await scan(blob);
+  }
+
   function reset() {
     setLastBlob(null);
     setPreview(null);
@@ -149,17 +156,23 @@ export function Scanner() {
 
       {status === "idle" && (
         <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => cameraInputRef.current?.click()}
-            className="flex min-h-32 w-full flex-col items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-6 text-white shadow-md transition hover:bg-green-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300"
-          >
-            <span className="text-4xl" aria-hidden>
-              📷
-            </span>
-            <span className="text-lg font-bold">Take photo / Upload</span>
-            <span className="text-sm text-green-50">Snap the item you want to throw away</span>
-          </button>
+          <LiveCamera
+            guide="Hold the item in the frame"
+            onCapture={onCameraCapture}
+            fallback={
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex min-h-32 w-full flex-col items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-6 text-white shadow-md transition hover:bg-green-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300"
+              >
+                <span className="text-4xl" aria-hidden>
+                  📷
+                </span>
+                <span className="text-lg font-bold">Take photo / Upload</span>
+                <span className="text-sm text-green-50">Snap the item you want to throw away</span>
+              </button>
+            }
+          />
           <button
             type="button"
             onClick={() => uploadInputRef.current?.click()}

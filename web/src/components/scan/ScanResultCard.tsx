@@ -4,15 +4,9 @@ import { useState } from "react";
 import { BIN_CATEGORIES, type BinCategory, type ScanResult } from "@/lib/scan-types";
 import { HELP, isBinCategory } from "@/lib/sorting-config";
 import { CATEGORY_STYLES } from "./categories";
-import type { AwardOutcome } from "./points-store";
+import { VerifyFlow } from "./VerifyFlow";
 
-const AWARD_MESSAGES: Record<Exclude<AwardOutcome["status"], "awarded">, string> = {
-  none: "No points for this one.",
-  duplicate: "Already scanned this photo — no extra points.",
-  cooldown: "Slow down! Wait a few seconds between scans to earn points.",
-};
-
-export function ScanResultCard({ result, award }: { result: ScanResult; award: AwardOutcome | null }) {
+export function ScanResultCard({ result, photoHash }: { result: ScanResult; photoHash: string | null }) {
   const [override, setOverride] = useState<BinCategory | null>(null);
 
   const category = override ?? result.category;
@@ -21,6 +15,8 @@ export function ScanResultCard({ result, award }: { result: ScanResult; award: A
   const pct = Math.round(result.confidence * 100);
   const help = category === "special" || category === "uncertain" ? HELP[category] : null;
   const showPicker = result.category === "uncertain";
+  const [verifying, setVerifying] = useState(false);
+  const canVerify = Boolean(result.ticket) && isBinCategory(result.category) && result.points > 0;
 
   return (
     <section
@@ -45,14 +41,21 @@ export function ScanResultCard({ result, award }: { result: ScanResult; award: A
         </span>
       </div>
 
-      {award && (
-        <p
-          className={`mt-4 rounded-xl px-3 py-2 text-sm font-semibold ${
-            award.status === "awarded" ? "bg-emerald-100 text-emerald-900" : "bg-gray-100 text-gray-700"
-          }`}
-        >
-          {award.status === "awarded" ? `🌿 +${award.points} points!` : AWARD_MESSAGES[award.status]}
-          <span className="ml-1 font-normal">Total: {award.total}</span>
+      {canVerify && !verifying && (
+        <div className="mt-4 flex flex-col gap-2 rounded-xl bg-emerald-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-semibold text-emerald-950">🌿 Worth {result.points} points — verify to earn</p>
+          <button
+            type="button"
+            onClick={() => setVerifying(true)}
+            className="min-h-11 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+          >
+            Verify I sorted it
+          </button>
+        </div>
+      )}
+      {!canVerify && (
+        <p className="mt-4 rounded-xl bg-gray-100 px-3 py-2 text-sm text-gray-700">
+          {result.source === "mock" ? "Simulated results" : "This result"} can&apos;t earn points.
         </p>
       )}
 
@@ -119,6 +122,16 @@ export function ScanResultCard({ result, award }: { result: ScanResult; award: A
       </div>
 
       {result.note && <p className="mt-4 text-sm italic text-gray-600">{result.note}</p>}
+
+      {verifying && result.ticket && isBinCategory(result.category) && (
+        <VerifyFlow
+          ticket={result.ticket}
+          item={result.item}
+          category={result.category}
+          points={result.points}
+          scanPhotoHash={photoHash}
+        />
+      )}
 
       {showPicker && (
         <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-3">

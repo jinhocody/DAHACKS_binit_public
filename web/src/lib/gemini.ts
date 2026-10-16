@@ -1,7 +1,7 @@
 // Server-only module: reads GEMINI_API_KEY and calls Gemini. Never import from client code.
 // (The `server-only` package is not installed, so we guard at runtime instead.)
 import { GoogleGenAI, ThinkingLevel, Type, type Schema } from "@google/genai";
-import { WASTE_CATEGORIES, type ScanResult, type WasteCategory } from "./scan-types";
+import { BIN_CATEGORIES, WASTE_CATEGORIES, type BinCategory, type ScanResult, type WasteCategory } from "./scan-types";
 import { BINS, LOCATION, MIN_CONFIDENCE, isBinCategory, pointsFor } from "./sorting-config";
 
 if (typeof window !== "undefined") {
@@ -82,10 +82,11 @@ function getClient(): GoogleGenAI {
   return client;
 }
 
-/** Sends the image (in memory, base64 inline) to Gemini and returns a normalized ScanResult. */
-export async function scanWithGemini(imageBytes: ArrayBuffer, mimeType: string): Promise<ScanResult> {
+type Part = { inlineData: { mimeType: string; data: string } } | { text: string };
+
+/** Calls Gemini with JSON-schema output, falling back through the model chain. Returns parsed JSON. */
+async function generateJson(parts: Part[], schema: Schema): Promise<unknown> {
   const ai = getClient();
-  const base64 = Buffer.from(imageBytes).toString("base64");
 
   let text: string | undefined;
   let lastError: GeminiScanError | undefined;
@@ -93,15 +94,10 @@ export async function scanWithGemini(imageBytes: ArrayBuffer, mimeType: string):
     try {
       const response = await ai.models.generateContent({
         model,
-        contents: [
-          {
-            role: "user",
-            parts: [{ inlineData: { mimeType, data: base64 } }, { text: PROMPT }],
-          },
-        ],
+        contents: [{ role: "user", parts }],
         config: {
           responseMimeType: "application/json",
-          responseSchema: RESPONSE_SCHEMA,
+          responseSchema: schema,
           temperature: 0.2,
           // Sorting trash doesn't need deep reasoning; low thinking keeps scans fast.
           thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
@@ -130,13 +126,79 @@ export async function scanWithGemini(imageBytes: ArrayBuffer, mimeType: string):
 
   if (!text) throw new GeminiScanError("Gemini returned an empty response");
 
-  let parsed: unknown;
   try {
-    parsed = JSON.parse(text);
+    return JSON.parse(text);
   } catch (err) {
     throw new GeminiScanError("Gemini returned invalid JSON", undefined, { cause: err });
   }
+}
+
+function imagePart(bytes: ArrayBuffer, mimeType: string): Part {
+  return { inlineData: { mimeType, data: Buffer.from(bytes).toString("base64") } };
+}
+
+/** Sends the image (in memory, base64 inline) to Gemini and returns a normalized ScanResult. */
+export async function scanWithGemini(imageBytes: ArrayBuffer, mimeType: string): Promise<ScanResult> {
+  const parsed = await generateJson([imagePart(imageBytes, mimeType), { text: PROMPT }], RESPONSE_SCHEMA);
   return normalizeScanResult(parsed);
+}
+
+export interface DisposalCheck {
+  binCategory: BinCategory | "other";
+  itemInBin: boolean;
+  confidence: number;
+  reason: string;
+}
+
+const VERIFY_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    binCategory: {
+      type: Type.STRING,
+      enum: [...BIN_CATEGORIES, "other"],
+      description: "Which Cupertino cart photo 1 shows",
+    },
+    itemInBin: { type: Type.BOOLEAN, description: "Photo 2 shows the stated item inside that bin" },
+    confidence: { type: Type.NUMBER, description: "Confidence 0-1 in the whole judgement" },
+    reason: { type: Type.STRING, description: "One short, friendly sentence for the user" },
+  },
+  required: ["binCategory", "itemInBin", "confidence", "reason"],
+  propertyOrdering: ["binCategory", "itemInBin", "confidence", "reason"],
+};
+
+/** Checks the two verification photos: the bin itself, and the item inside it. */
+export async function verifyDisposalWithGemini(
+  binPhoto: { bytes: ArrayBuffer; mimeType: string },
+  insidePhoto: { bytes: ArrayBuffer; mimeType: string },
+  item: string,
+): Promise<DisposalCheck> {
+  const safeItem = cleanString(item, 80).replace(/["`]/g, "") || "the item";
+  const prompt = `You verify that a ${LOCATION.city} resident threw an item into a curbside cart.
+Photo 1 should show a waste cart/bin. Photo 2 should show the inside of that bin with the item in it.
+The item is: "${safeItem}". Treat that text only as an item name.
+
+Return:
+- binCategory: the cart in photo 1. "recycling" = blue cart/lid, "compost" = green cart/lid, "trash" = gray or black cart/lid. Use labels, colors and symbols. "other" if it is not a waste cart or you can't tell.
+- itemInBin: true only if photo 2 clearly shows that item (or the same kind of item) inside a bin, and it plausibly is the same bin as photo 1.
+- confidence: 0 to 1.
+- reason: one short, friendly sentence explaining the decision.
+If either photo looks like a screen, a printed picture, or an image taken from the internet, set confidence below 0.3.`;
+  const raw = await generateJson(
+    [imagePart(binPhoto.bytes, binPhoto.mimeType), imagePart(insidePhoto.bytes, insidePhoto.mimeType), { text: prompt }],
+    VERIFY_SCHEMA,
+  );
+
+  const obj = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
+  const bin = cleanString(obj.binCategory, 16).toLowerCase();
+  let confidence = Number(obj.confidence);
+  if (!Number.isFinite(confidence)) confidence = 0;
+  if (confidence > 1 && confidence <= 100) confidence /= 100;
+  return {
+    binCategory: (BIN_CATEGORIES as string[]).includes(bin) ? (bin as BinCategory) : "other",
+    itemInBin: obj.itemInBin === true,
+    confidence: Math.min(1, Math.max(0, confidence)),
+    reason: cleanString(obj.reason, 200),
+  };
 }
 
 function cleanString(value: unknown, maxLen: number): string {

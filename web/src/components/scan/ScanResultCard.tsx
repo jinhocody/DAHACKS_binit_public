@@ -1,19 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { WASTE_CATEGORIES, type ScanResult, type WasteCategory } from "@/lib/scan-types";
+import { BIN_CATEGORIES, type BinCategory, type ScanResult } from "@/lib/scan-types";
+import { HELP, isBinCategory } from "@/lib/sorting-config";
 import { CATEGORY_STYLES } from "./categories";
+import type { AwardOutcome } from "./points-store";
 
-const LOW_CONFIDENCE = 0.6;
+const AWARD_MESSAGES: Record<Exclude<AwardOutcome["status"], "awarded">, string> = {
+  none: "No points for this one.",
+  duplicate: "Already scanned this photo — no extra points.",
+  cooldown: "Slow down! Wait a few seconds between scans to earn points.",
+};
 
-export function ScanResultCard({ result }: { result: ScanResult }) {
-  const [override, setOverride] = useState<WasteCategory | null>(null);
+export function ScanResultCard({ result, award }: { result: ScanResult; award: AwardOutcome | null }) {
+  const [override, setOverride] = useState<BinCategory | null>(null);
 
   const category = override ?? result.category;
   const style = CATEGORY_STYLES[category];
   const bin = override ? CATEGORY_STYLES[override].genericBin : result.bin;
   const pct = Math.round(result.confidence * 100);
-  const lowConfidence = result.confidence < LOW_CONFIDENCE;
+  const help = category === "special" || category === "uncertain" ? HELP[category] : null;
+  const showPicker = result.category === "uncertain";
 
   return (
     <section
@@ -38,10 +45,42 @@ export function ScanResultCard({ result }: { result: ScanResult }) {
         </span>
       </div>
 
-      <p className="mt-4 rounded-xl bg-gray-50 p-3 text-base">
-        <span className="text-gray-600">Put it in: </span>
-        <strong className="break-words">{bin}</strong>
-        {override && <span className="block text-xs text-gray-500">(you picked this category)</span>}
+      {award && (
+        <p
+          className={`mt-4 rounded-xl px-3 py-2 text-sm font-semibold ${
+            award.status === "awarded" ? "bg-emerald-100 text-emerald-900" : "bg-gray-100 text-gray-700"
+          }`}
+        >
+          {award.status === "awarded" ? `🌿 +${award.points} points!` : AWARD_MESSAGES[award.status]}
+          <span className="ml-1 font-normal">Total: {award.total}</span>
+        </p>
+      )}
+
+      {bin ? (
+        <p className="mt-4 rounded-xl bg-gray-50 p-3 text-base">
+          <span className="text-gray-600">Put it in: </span>
+          <strong className="break-words">{bin}</strong>
+          {override && <span className="block text-xs text-gray-500">(you picked this, so no points)</span>}
+        </p>
+      ) : (
+        help && (
+          <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+            <p className="font-semibold">No regular bin. {help.message}</p>
+            <a
+              href={help.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-block font-semibold underline underline-offset-2"
+            >
+              {help.linkLabel} ↗
+            </a>
+          </div>
+        )
+      )}
+
+      <p className="mt-3 text-sm text-gray-700">
+        <span className="font-semibold">Why: </span>
+        {result.reason}
       </p>
 
       {!override && result.prepSteps.length > 0 && (
@@ -75,28 +114,28 @@ export function ScanResultCard({ result }: { result: ScanResult }) {
           aria-valuenow={pct}
           aria-label="Confidence"
         >
-          <div
-            className={`h-full rounded-full ${lowConfidence ? "bg-amber-500" : style.accent}`}
-            style={{ width: `${pct}%` }}
-          />
+          <div className={`h-full rounded-full ${style.accent}`} style={{ width: `${pct}%` }} />
         </div>
       </div>
 
       {result.note && <p className="mt-4 text-sm italic text-gray-600">{result.note}</p>}
 
-      {lowConfidence && (
+      {showPicker && (
         <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-3">
-          <p className="font-semibold text-amber-900">Not sure — is it one of these?</p>
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {WASTE_CATEGORIES.map((c) => {
+          <p className="font-semibold text-amber-900">Know where it goes? Pick a bin (no points).</p>
+          {result.aiGuess && isBinCategory(result.aiGuess) && (
+            <p className="mt-1 text-xs text-amber-900">AI&apos;s best guess: {CATEGORY_STYLES[result.aiGuess].label}</p>
+          )}
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {BIN_CATEGORIES.map((c) => {
               const s = CATEGORY_STYLES[c];
-              const selected = category === c;
+              const selected = override === c;
               return (
                 <button
                   key={c}
                   type="button"
                   aria-pressed={selected}
-                  onClick={() => setOverride(c === result.category ? null : c)}
+                  onClick={() => setOverride(selected ? null : c)}
                   className={`min-h-11 rounded-lg px-2 py-2 text-sm font-medium ring-1 transition ${s.pill} ${
                     selected ? "ring-2 ring-offset-1" : "opacity-80 hover:opacity-100"
                   }`}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import type { ScanError, ScanResult } from "@/lib/scan-types";
 import { resizeImage } from "./resize-image";
 import { ScanResultCard } from "./ScanResultCard";
+import { awardPoints, hashPhoto, type AwardOutcome } from "./points-store";
 
 type Status = "idle" | "loading" | "done" | "error";
 
@@ -19,6 +20,7 @@ export function Scanner() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scanId, setScanId] = useState(0);
+  const [award, setAward] = useState<AwardOutcome | null>(null);
 
   const [lastBlob, setLastBlob] = useState<Blob | null>(null);
   const previewRef = useRef<string | null>(null);
@@ -40,6 +42,7 @@ export function Scanner() {
     setStatus("loading");
     setError(null);
     setResult(null);
+    setAward(null);
     try {
       const body = new FormData();
       body.append("image", blob, "photo.jpg");
@@ -49,6 +52,7 @@ export function Scanner() {
         const msg = (data as ScanError | null)?.error;
         throw new Error(msg || `Scan failed (HTTP ${res.status}).`);
       }
+      setAward(awardPoints(Number(data.points) || 0,await hashPhoto(blob)));
       setResult(data);
       setScanId((n) => n + 1);
       setStatus("done");
@@ -222,7 +226,7 @@ export function Scanner() {
         </div>
       )}
 
-      {status === "done" && result && <ScanResultCard key={scanId} result={result} />}
+      {status === "done" && result && <ScanResultCard key={scanId} result={result} award={award} />}
 
       {status === "done" && (
         <button

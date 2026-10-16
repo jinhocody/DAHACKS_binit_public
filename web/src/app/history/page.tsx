@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const PREVIEW: { item: string; category: WasteCategory; when: string }[] = [
   { item: "Plastic water bottle", category: "recycling", when: "Today" },
   { item: "Banana peel", category: "compost", when: "Yesterday" },
-  { item: "AA batteries", category: "hazardous", when: "2 days ago" },
+  { item: "AA batteries", category: "special", when: "2 days ago" },
 ];
 
 export default function HistoryPage() {

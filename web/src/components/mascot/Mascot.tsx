@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getPointsTotal } from "@/components/scan/points-store";
-import { ARM_PIVOT, BASE_PIVOT, LOOKS, origin, partClips, spoutPosition, type MascotLook } from "./looks";
+import { BASE_PIVOT, origin, spoutPosition, type Outfit } from "./looks";
+import { useShop } from "./outfit-store";
+import { SpriteLayers } from "./SpriteLayers";
 import "./mascot.css";
 
 type Action = "idle" | "hop" | "jump" | "spin" | "wiggle" | "walk" | "wave" | "water" | "dance" | "look";
@@ -32,9 +34,11 @@ interface Heart {
 const prefersReducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export function Mascot({ look = "base" }: { look?: MascotLook }) {
-  const config = LOOKS[look];
-  const clips = partClips(config);
+/** The animated pet plant. Wears the outfit equipped in the shop unless one is passed in. */
+export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
+  const { equipped } = useShop();
+  const outfit = outfitProp ?? equipped;
+  const outfitKey = `${outfit.can}/${outfit.pot}/${outfit.head}`;
 
   const [action, setAction] = useState<Action>("idle");
   const [facing, setFacing] = useState<"right" | "left">("right");
@@ -166,6 +170,20 @@ export function Mascot({ look = "base" }: { look?: MascotLook }) {
     return () => clearTimeout(t);
   }, [play, burstHearts, later]);
 
+  // A little hop whenever the outfit changes. The saved outfit loads right after hydration,
+  // so changes in the first moment after mount are not the user's doing and get no hop.
+  const outfitKeyRef = useRef(outfitKey);
+  const mountedAtRef = useRef(0);
+  useEffect(() => {
+    mountedAtRef.current = performance.now();
+  }, []);
+  useEffect(() => {
+    if (outfitKeyRef.current === outfitKey) return;
+    outfitKeyRef.current = outfitKey;
+    if (performance.now() - mountedAtRef.current < 500) return;
+    later(() => play("hop", ACTION_MS.hop), 0);
+  }, [outfitKey, later, play]);
+
   useEffect(() => {
     const timers = timersRef.current;
     return () => timers.forEach(clearTimeout);
@@ -175,12 +193,6 @@ export function Mascot({ look = "base" }: { look?: MascotLook }) {
     burstHearts(5);
     play(Math.random() < 0.35 ? "spin" : "jump", ACTION_MS.jump);
   }
-
-  const partStyle = (clip: string, extra?: CSSProperties): CSSProperties => ({
-    backgroundImage: `url(${config.src})`,
-    clipPath: clip,
-    ...extra,
-  });
 
   return (
     <div ref={stageRef} className="mascot-stage">
@@ -196,22 +208,11 @@ export function Mascot({ look = "base" }: { look?: MascotLook }) {
           className="mascot-actor"
           style={{ transformOrigin: origin(BASE_PIVOT) }}
           onClick={onPet}
-          aria-label={`Pet the plant (${config.label})`}
+          aria-label="Pet the plant"
         >
           <div className="mascot-flip" data-facing={facing}>
             <div className="mascot-sprite" style={{ transformOrigin: origin(BASE_PIVOT) }}>
-              <div className="mascot-part" style={partStyle(clips.body)} />
-              <div
-                className={`mascot-part mascot-top`}
-                style={partStyle(clips.top, {
-                  transformOrigin: origin(config.topPivot),
-                  ["--sway" as string]: `${config.topSway}deg`,
-                })}
-              />
-              <div
-                className={`mascot-part mascot-arm`}
-                style={partStyle(clips.arm, { transformOrigin: origin(ARM_PIVOT) })}
-              />
+              <SpriteLayers outfit={outfit} />
               {action === "water" &&
                 [0, 1, 2, 3].map((i) => (
                   <span

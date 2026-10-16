@@ -1,6 +1,7 @@
 // Mascot looks and how each sprite is cut into moving parts.
 // The PNGs are 64×64 pixel art scaled to 1024px. All coordinates below are in art pixels (0–64).
-// Each look is the same plant drawn with different accessories, so only the leaf/headwear cut differs.
+// Each look is the same plant drawn with different accessories, so parts can be mixed across looks:
+// the can comes from one PNG, the pot from another, the headwear from a third. The face is always base.
 
 export type MascotLook = "base" | "flower" | "straw" | "gold";
 
@@ -22,8 +23,30 @@ export interface LookConfig {
 
 const ART_SIZE = 64;
 
-/** The watering-can arm is the same region on every look: left of column 24, above row 35. */
-export const ARM_BOX = { right: 24, bottom: 35 } as const;
+/**
+ * The watering-can arm is the same region on every look: left of column 24, above row 35,
+ * plus the strip left of the pot rim (column 19) down to row 38, where some cans reach.
+ * Above row 23, column 23 belongs to the headwear (the flower crown reaches it).
+ */
+export const ARM_BOX = { right: 24, bottom: 35, rimLeft: 19, cansBottom: 38, crownLeft: 23, crownBottom: 23 } as const;
+/**
+ * Top edge of the pot, from left to right, checked against all four PNGs.
+ * The rim curves up at both sides, so the edge steps down toward the middle.
+ */
+const POT_EDGE: readonly Point[] = [
+  [24, 35],
+  [24, 36],
+  [25, 36],
+  [25, 37],
+  [30, 37],
+  [30, 38],
+  [41, 38],
+  [41, 37],
+  [42, 37],
+  [42, 36],
+  [43, 36],
+  [43, 35],
+];
 /** Shoulder joint the arm rotates around. */
 export const ARM_PIVOT: Point = [23, 33];
 /** Bottom-center of the pot, used for squash and stretch. */
@@ -92,27 +115,69 @@ const pct = (v: number) => `${(v / ART_SIZE) * 100}%`;
 const polygon = (points: readonly Point[]) => `polygon(${points.map(([x, y]) => `${pct(x)} ${pct(y)}`).join(", ")})`;
 export const origin = ([x, y]: Point) => `${pct(x)} ${pct(y)}`;
 
-/** clip-path values for the three stacked layers. At rest they tile the sprite exactly. */
-export function partClips(look: LookConfig) {
-  const { right, bottom } = ARM_BOX;
-  const firstY = look.topEdge[0][1];
+/** Which look each accessory slot is taken from. "base" means no accessory in that slot. */
+export interface Outfit {
+  can: MascotLook;
+  pot: MascotLook;
+  head: MascotLook;
+}
+
+export const DEFAULT_OUTFIT: Outfit = { can: "base", pot: "base", head: "base" };
+
+export interface Layer {
+  src: string;
+  clip: string;
+}
+
+/**
+ * The four stacked layers for an outfit. At rest they tile the sprite exactly:
+ * pot (bottom), face (middle, always base), top (leaf + headwear), arm (watering can).
+ */
+export function outfitLayers(outfit: Outfit) {
+  const { right, bottom, rimLeft, cansBottom, crownLeft, crownBottom } = ARM_BOX;
+  const head = LOOKS[outfit.head];
+  const topEdge = head.topEdge;
   return {
-    arm: polygon([
-      [0, 0],
-      [right, 0],
-      [right, bottom],
-      [0, bottom],
-    ]),
-    top: polygon([[right, 0], [ART_SIZE, 0], ...[...look.topEdge].reverse()]),
-    body: polygon([
-      [0, bottom],
-      [right, bottom],
-      [right, firstY],
-      ...look.topEdge,
-      [ART_SIZE, ART_SIZE],
-      [0, ART_SIZE],
-    ]),
-  };
+    pot: {
+      src: LOOKS[outfit.pot].src,
+      clip: polygon([
+        [0, cansBottom],
+        [rimLeft, cansBottom],
+        [rimLeft, bottom],
+        ...POT_EDGE,
+        [ART_SIZE, bottom],
+        [ART_SIZE, ART_SIZE],
+        [0, ART_SIZE],
+      ]),
+    },
+    face: {
+      src: LOOKS.base.src,
+      clip: polygon([...topEdge, [ART_SIZE, bottom], ...[...POT_EDGE].reverse()]),
+    },
+    top: {
+      src: head.src,
+      clip: polygon([
+        [crownLeft, 0],
+        [ART_SIZE, 0],
+        ...[...topEdge].reverse(),
+        [right, crownBottom],
+        [crownLeft, crownBottom],
+      ]),
+    },
+    arm: {
+      src: LOOKS[outfit.can].src,
+      clip: polygon([
+        [0, 0],
+        [crownLeft, 0],
+        [crownLeft, crownBottom],
+        [right, crownBottom],
+        [right, bottom],
+        [rimLeft, bottom],
+        [rimLeft, cansBottom],
+        [0, cansBottom],
+      ]),
+    },
+  } satisfies Record<string, Layer>;
 }
 
 export function spoutPosition() {

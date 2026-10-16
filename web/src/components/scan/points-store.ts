@@ -1,7 +1,8 @@
 "use client";
 
 // Temporary per-browser points ledger until the backend owns points.
-// Points are only added after /api/verify confirms the item went in the right bin.
+// Points are only added after /api/verify confirms the item went in the right bin,
+// and a confirmed wrong bin takes a small penalty off the total.
 // Anti-cheat: each scan earns once, the same photo never earns twice, awards need a short
 // cooldown between them, and there's a daily cap.
 import { AWARD_COOLDOWN_SECONDS, DAILY_POINT_CAP, REMEMBERED_PHOTOS } from "@/lib/sorting-config";
@@ -13,8 +14,15 @@ interface PointsState {
   lastAwardAt: number;
   photoHashes: string[];
   ticketIds: string[];
+  penalizedTicketIds: string[];
   day: string; // local YYYY-MM-DD
   dayTotal: number;
+}
+
+export interface PenaltyOutcome {
+  /** Points actually removed (0 when this scan was already penalized or the total was 0). */
+  points: number;
+  total: number;
 }
 
 export type AwardOutcome =
@@ -27,7 +35,7 @@ function today(): string {
 }
 
 function load(): PointsState {
-  const empty: PointsState = { total: 0, lastAwardAt: 0, photoHashes: [], ticketIds: [], day: today(), dayTotal: 0 };
+  const empty: PointsState = { total: 0, lastAwardAt: 0, photoHashes: [], ticketIds: [], penalizedTicketIds: [], day: today(), dayTotal: 0 };
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null") as Partial<PointsState> | null;
     if (!parsed || typeof parsed.total !== "number") return empty;
@@ -37,6 +45,7 @@ function load(): PointsState {
       lastAwardAt: typeof parsed.lastAwardAt === "number" ? parsed.lastAwardAt : 0,
       photoHashes: Array.isArray(parsed.photoHashes) ? parsed.photoHashes : [],
       ticketIds: Array.isArray(parsed.ticketIds) ? parsed.ticketIds : [],
+      penalizedTicketIds: Array.isArray(parsed.penalizedTicketIds) ? parsed.penalizedTicketIds : [],
       day: empty.day,
       dayTotal: sameDay && typeof parsed.dayTotal === "number" ? parsed.dayTotal : 0,
     };
@@ -88,4 +97,18 @@ export function awardVerified(points: number, ticketId: string, photoHashes: str
   };
   save(next);
   return { status: "awarded", points: allowed, total: next.total, capped: allowed < points };
+}
+
+/** Removes points for a wrong-bin disposal, at most once per scan and never below 0. */
+export function deductWrongBin(points: number, ticketId: string): PenaltyOutcome {
+  const state = load();
+  if (state.penalizedTicketIds.includes(ticketId)) return { points: 0, total: state.total };
+  const removed = Math.min(points, state.total);
+  const next: PointsState = {
+    ...state,
+    total: state.total - removed,
+    penalizedTicketIds: [ticketId, ...state.penalizedTicketIds].slice(0, REMEMBERED_PHOTOS),
+  };
+  save(next);
+  return { points: removed, total: next.total };
 }

@@ -61,6 +61,8 @@ export const VERIFY_WINDOW_MINUTES = 10; // a scan must be verified within this 
 export const VERIFY_MIN_CONFIDENCE = 0.6; // Gemini must be at least this sure the item is in the right bin
 export const VERIFY_MAX_ATTEMPTS = 2; // tries per scanned item
 export const DAILY_POINT_CAP = 50;
+/** Points taken away when the AI is sure the item went in the wrong bin (once per scanned item). */
+export const WRONG_BIN_PENALTY = 1;
 
 export function isBinCategory(category: WasteCategory): category is BinCategory {
   return (BIN_CATEGORIES as WasteCategory[]).includes(category);

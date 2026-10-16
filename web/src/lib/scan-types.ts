@@ -35,6 +35,8 @@ export interface VerifyResult {
   ticketId?: string;
   /** True when the AI was unavailable, so trying again later may work. */
   retryable?: boolean;
+  /** Points to deduct because the item went in the wrong bin. */
+  penalty?: number;
 }
 
 export interface ScanError {

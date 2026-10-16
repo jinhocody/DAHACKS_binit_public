@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import type { BinCategory, VerifyResult } from "@/lib/scan-types";
-import { BINS, DAILY_POINT_CAP, VERIFY_MAX_ATTEMPTS, VERIFY_WINDOW_MINUTES } from "@/lib/sorting-config";
-import { awardVerified, hashPhoto, type AwardOutcome } from "./points-store";
+import { BINS, DAILY_POINT_CAP, VERIFY_MAX_ATTEMPTS, VERIFY_WINDOW_MINUTES, WRONG_BIN_PENALTY } from "@/lib/sorting-config";
+import { awardVerified, deductWrongBin, hashPhoto, type AwardOutcome, type PenaltyOutcome } from "./points-store";
 import { resizeImage } from "./resize-image";
 
 type Slot = "bin" | "inside";
@@ -35,6 +35,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
   const [status, setStatus] = useState<"idle" | "checking" | "done">("idle");
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [award, setAward] = useState<AwardOutcome | null>(null);
+  const [penalty, setPenalty] = useState<PenaltyOutcome | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const inputs = { bin: useRef<HTMLInputElement>(null), inside: useRef<HTMLInputElement>(null) };
@@ -80,6 +81,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
         const hashes = await Promise.all([hashPhoto(photos.bin.blob), hashPhoto(photos.inside.blob)]);
         setAward(awardVerified(data.points, data.ticketId, scanPhotoHash ? [scanPhotoHash, ...hashes] : hashes));
       }
+      setPenalty(data.penalty && data.ticketId ? deductWrongBin(data.penalty, data.ticketId) : null);
       setResult(data);
       setStatus("done");
     } catch (err) {
@@ -102,7 +104,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
       <h3 className="font-semibold text-emerald-950">Verify to earn {points} points</h3>
       <p className="mt-0.5 text-xs text-emerald-900">
         Put your {item.toLowerCase()} in the {BINS[category]}, then take both photos within {VERIFY_WINDOW_MINUTES}{" "}
-        minutes of scanning.
+        minutes of scanning. Wrong bin costs {WRONG_BIN_PENALTY} point.
       </p>
 
       {status !== "done" && (
@@ -182,6 +184,12 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
                 {AWARD_MESSAGES[award.status]} Total: {award.total}
               </p>
             ))}
+          {penalty && (
+            <p className="mt-1 font-semibold">
+              {penalty.points > 0 ? `🥀 −${penalty.points} point for the wrong bin` : "No extra points taken for this item"} ·
+              Total: {penalty.total}
+            </p>
+          )}
           {canRetry && (
             <button
               type="button"

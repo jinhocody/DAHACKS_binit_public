@@ -1,5 +1,5 @@
 import { AccessoryShop } from "@/components/mascot/AccessoryShop";
-import { Mascot } from "@/components/mascot/Mascot";
+import { HomeMascot } from "@/components/mascot/HomeMascot";
 import { Button } from "@/components/ui/Button";
 
 export default function Home() {
@@ -14,8 +14,8 @@ export default function Home() {
         aria-label="Pet plant character"
         className="flex min-h-[60vh] flex-1 rounded-3xl border-2 border-dashed border-emerald-200 bg-emerald-50/40"
       >
-        {/* Wears whatever is equipped in the shop below. */}
-        <Mascot />
+        {/* Happy plant wearing the shop outfit, or the sad rainy plant while points are below 0. */}
+        <HomeMascot />
       </section>
 
       <AccessoryShop />

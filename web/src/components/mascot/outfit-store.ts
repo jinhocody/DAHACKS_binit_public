@@ -18,10 +18,12 @@ interface ShopState {
 export interface ShopSnapshot extends ShopState {
   /** Points earned minus points spent, never below 0. */
   balance: number;
+  /** Points earned minus points spent. Goes below 0 when wrong-bin penalties eat into points already spent. */
+  spendable: number;
 }
 
 const VALID_IDS = new Set<string>(ACCESSORIES.map((a) => a.id));
-const SERVER_SNAPSHOT: ShopSnapshot = { owned: [], spent: 0, equipped: DEFAULT_OUTFIT, balance: 0 };
+const SERVER_SNAPSHOT: ShopSnapshot = { owned: [], spent: 0, equipped: DEFAULT_OUTFIT, balance: 0, spendable: 0 };
 const listeners = new Set<() => void>();
 
 function readRaw(): string | null {
@@ -66,7 +68,8 @@ function getSnapshot(): ShopSnapshot {
   const total = getPointsTotal();
   if (cache && cache.raw === raw && cache.total === total) return cache.snapshot;
   const state = parse(raw);
-  const snapshot = { ...state, balance: Math.max(0, total - state.spent) };
+  const spendable = total - state.spent;
+  const snapshot = { ...state, balance: Math.max(0, spendable), spendable };
   cache = { raw, total, snapshot };
   return snapshot;
 }
@@ -74,7 +77,12 @@ function getSnapshot(): ShopSnapshot {
 function subscribe(listener: () => void) {
   listeners.add(listener);
   window.addEventListener("storage", listener);
+  // The points ledger doesn't announce changes (e.g. a wrong-bin deduction on the scan page), and
+  // Next keeps visited pages alive while hidden. Re-check whenever a component (re)subscribes,
+  // which also happens when a kept-alive page is shown again.
+  const recheck = setTimeout(listener, 0);
   return () => {
+    clearTimeout(recheck);
     listeners.delete(listener);
     window.removeEventListener("storage", listener);
   };

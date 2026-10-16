@@ -6,6 +6,7 @@ import type { BinCategory, VerifyResult } from "@/lib/scan-types";
 import { BINS, DAILY_POINT_CAP, VERIFY_MAX_ATTEMPTS, VERIFY_WINDOW_MINUTES, WRONG_BIN_PENALTY } from "@/lib/sorting-config";
 import { awardVerified, deductWrongBin, hashPhoto, type AwardOutcome, type PenaltyOutcome } from "./points-store";
 import { LiveCamera } from "./LiveCamera";
+import { WrongBinPopup } from "@/components/mascot/WrongBinPopup";
 import { ScanningOverlay } from "./ScanningOverlay";
 
 type Slot = "bin" | "inside";
@@ -41,6 +42,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [award, setAward] = useState<AwardOutcome | null>(null);
   const [penalty, setPenalty] = useState<PenaltyOutcome | null>(null);
+  const [sadDismissedFor, setSadDismissedFor] = useState<VerifyResult | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const urlsRef = useRef<string[]>([]);
@@ -173,6 +175,15 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
             </button>
           )}
         </>
+      )}
+
+      {penalty && result && !result.verified && sadDismissedFor !== result && (
+        <WrongBinPopup
+          removed={penalty.points}
+          total={penalty.total}
+          correctBin={BINS[category] ?? "right bin"}
+          onClose={() => setSadDismissedFor(result)}
+        />
       )}
 
       {error && (

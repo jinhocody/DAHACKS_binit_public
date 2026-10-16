@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
 
 export const NAV_ITEMS = [
-  { href: "/", label: "Home", emoji: "🏠" },
-  { href: "/scan", label: "Scan", emoji: "📸" },
-  { href: "/history", label: "History", emoji: "🕘" },
-  { href: "/rewards", label: "Rewards", emoji: "🏆" },
+  { href: "/", label: "Home", icon: "home" },
+  { href: "/scan", label: "Scan", icon: "camera" },
+  { href: "/history", label: "History", icon: "clock" },
+  { href: "/rewards", label: "Rewards", icon: "trophy" },
 ] as const;
 
 function isActive(pathname: string | null, href: string) {
@@ -62,7 +63,7 @@ export function MobileNavLinks({ pathname }: { pathname: string | null }) {
                   active ? "bg-emerald-100" : ""
                 }`}
               >
-                {item.emoji}
+                <PixelIcon name={item.icon} size={24} />
               </span>
               {item.label}
             </Link>

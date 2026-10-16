@@ -5,6 +5,7 @@ import { getPointsTotal } from "@/components/scan/points-store";
 import { BASE_PIVOT, origin, spoutPosition, type Outfit } from "./looks";
 import { useShop } from "./outfit-store";
 import { SpriteLayers } from "./SpriteLayers";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
 import "./mascot.css";
 
 type Action = "idle" | "hop" | "jump" | "spin" | "wiggle" | "walk" | "wave" | "water" | "dance" | "look";
@@ -245,7 +246,8 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
 
         {bubble && (
           <p className="mascot-bubble" role="status">
-            🌱 {bubble}
+            <PixelIcon name="sprout" size={18} className="-mt-0.5 mr-1 align-middle" />
+            {bubble}
           </p>
         )}
       </div>

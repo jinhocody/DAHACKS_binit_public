@@ -1,12 +1,17 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { BinCategory, VerifyResult } from "@/lib/scan-types";
 import { BINS, DAILY_POINT_CAP, VERIFY_MAX_ATTEMPTS, VERIFY_WINDOW_MINUTES, WRONG_BIN_PENALTY } from "@/lib/sorting-config";
 import { awardVerified, deductWrongBin, hashPhoto, type AwardOutcome, type PenaltyOutcome } from "./points-store";
 import { LiveCamera } from "./LiveCamera";
+import { ScanningOverlay } from "./ScanningOverlay";
 
 type Slot = "bin" | "inside";
+
+/** After a wrong-bin deduction, show the result this long, then go back to the home page. */
+const HOME_REDIRECT_MS = 3000;
 type Photo = { blob: Blob; url: string };
 
 const SLOTS: { key: Slot; title: string; hint: string }[] = [
@@ -39,6 +44,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
   const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const urlsRef = useRef<string[]>([]);
+  const router = useRouter();
 
   // Release preview URLs on unmount.
   useEffect(() => () => urlsRef.current.forEach((u) => URL.revokeObjectURL(u)), []);
@@ -89,9 +95,17 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
     setStatus("idle");
   }
 
+  // Wrong bin: points were deducted, so end this attempt and return home.
+  const wrongBin = Boolean(result?.penalty);
+  useEffect(() => {
+    if (!wrongBin) return;
+    const timer = window.setTimeout(() => router.push("/"), HOME_REDIRECT_MS);
+    return () => window.clearTimeout(timer);
+  }, [wrongBin, router]);
+
   const checking = status === "checking";
   const nextSlot: Slot | null = !photos.bin ? "bin" : !photos.inside ? "inside" : null;
-  const canRetry = result && !result.verified && (result.retryable || attempts < VERIFY_MAX_ATTEMPTS);
+  const canRetry = result && !result.verified && !wrongBin && (result.retryable || attempts < VERIFY_MAX_ATTEMPTS);
 
   return (
     <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 sm:p-4">
@@ -103,7 +117,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
 
       {status !== "done" && (
         <>
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="relative mt-3 grid grid-cols-2 gap-2 rounded-xl">
             {SLOTS.map(({ key, title }) => {
               const photo = photos[key];
               return (
@@ -130,6 +144,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
                 </div>
               );
             })}
+            {checking && <ScanningOverlay label="Checking your bin…" />}
           </div>
 
           {nextSlot && !checking && (
@@ -146,13 +161,6 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
                 }
               />
             </div>
-          )}
-
-          {checking && (
-            <p role="status" className="mt-3 flex items-center justify-center gap-2 text-sm font-medium text-emerald-900">
-              <span className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-300 border-t-emerald-700" aria-hidden />
-              Checking your bin…
-            </p>
           )}
 
           {!nextSlot && !checking && photos.bin && photos.inside && (
@@ -196,6 +204,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
               Total: {penalty.total}
             </p>
           )}
+          {wrongBin && <p className="mt-2 text-xs">Taking you back to the home page…</p>}
           {canRetry && (
             <button
               type="button"

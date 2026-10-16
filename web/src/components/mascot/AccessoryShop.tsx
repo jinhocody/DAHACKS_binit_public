@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { ACCESSORIES, ACCESSORY_PRICE, SLOTS, type Accessory, type Slot } from "./accessories";
 import { DEFAULT_OUTFIT } from "./looks";
 import { buyAccessory, equipAccessory, unequipSlot, useShop, type ShopSnapshot } from "./outfit-store";
@@ -46,11 +47,12 @@ export function AccessoryShop() {
         </div>
         {shop.spendable < 0 ? (
           <p className="rounded-full bg-slate-200 px-4 py-2 text-sm font-bold text-slate-800">
-            🌧️ −{-shop.spendable} point{shop.spendable === -1 ? "" : "s"} · earn {-shop.spendable} to cheer up your plant
+            <PixelIcon name="rain" size={18} className="-mt-0.5 mr-1 align-middle" />−{-shop.spendable} point{shop.spendable === -1 ? "" : "s"} · earn {-shop.spendable} to cheer up your plant
           </p>
         ) : (
           <p className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-900">
-            🌱 {shop.balance} points to spend
+            <PixelIcon name="sprout" size={18} className="-mt-0.5 mr-1 align-middle" />
+            {shop.balance} points to spend
           </p>
         )}
       </div>
@@ -95,10 +97,10 @@ function ShopItem({
   const state = itemState(item, shop);
   const missing = ACCESSORY_PRICE - shop.spendable; // counts back up from below 0 too
   const button = {
-    wearing: { text: "Wearing ✓", className: "bg-emerald-600 text-white hover:bg-emerald-700" },
-    wear: { text: "Wear", className: "bg-white text-emerald-800 ring-1 ring-emerald-300 hover:bg-emerald-50" },
-    buy: { text: `Buy · ${ACCESSORY_PRICE} pts`, className: "bg-amber-400 text-amber-950 hover:bg-amber-300" },
-    locked: { text: "🔒 Locked", className: "bg-gray-100 text-gray-500" },
+    wearing: { text: "Wearing", icon: "check" as const, className: "bg-emerald-600 text-white hover:bg-emerald-700" },
+    wear: { text: "Wear", icon: null, className: "bg-white text-emerald-800 ring-1 ring-emerald-300 hover:bg-emerald-50" },
+    buy: { text: `Buy · ${ACCESSORY_PRICE} pts`, icon: null, className: "bg-amber-400 text-amber-950 hover:bg-amber-300" },
+    locked: { text: "Locked", icon: "lock" as const, className: "bg-gray-100 text-gray-500" },
   }[state];
 
   return (
@@ -125,6 +127,7 @@ function ShopItem({
         aria-label={state === "wearing" ? `Take off ${item.name}` : `${button.text}: ${item.name}`}
         className={`mt-2 min-h-11 w-full rounded-xl px-2 text-xs font-bold transition sm:text-sm ${button.className}`}
       >
+        {button.icon && <PixelIcon name={button.icon} size={16} light="transparent" className="-mt-0.5 mr-1 align-middle" />}
         {button.text}
       </button>
       {state === "locked" && <p className="mt-1 text-[11px] text-gray-500">{missing} more pts</p>}

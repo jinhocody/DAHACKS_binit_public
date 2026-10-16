@@ -24,12 +24,11 @@ type NativeButtonProps = BaseProps &
 export type ButtonProps = LinkButtonProps | NativeButtonProps;
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-50";
+  "pixel-btn inline-flex items-center justify-center gap-2 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 active:bg-emerald-800",
-  secondary:
-    "bg-white text-emerald-800 ring-1 ring-inset ring-emerald-200 hover:bg-emerald-50 active:bg-emerald-100",
+  primary: "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800",
+  secondary: "bg-white text-emerald-900 hover:bg-emerald-50 active:bg-emerald-100",
 };
 
 const sizes: Record<ButtonSize, string> = {

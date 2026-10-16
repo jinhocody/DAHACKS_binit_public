@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { Suspense } from "react";
 import {
   ActiveDesktopNavLinks,
@@ -20,9 +21,9 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight text-emerald-900">
             <span
               aria-hidden="true"
-              className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-base text-white"
+              className="flex h-8 w-8 items-center justify-center border-2 border-emerald-900 bg-emerald-200 text-emerald-900"
             >
-              ♻
+              <PixelIcon name="sprout" size={22} />
             </span>
             SortSnap
           </Link>

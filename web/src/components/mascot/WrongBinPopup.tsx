@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { SadMascot } from "./SadMascot";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
 
 interface WrongBinPopupProps {
   /** Points actually removed (0 when this scan was already penalized). */
@@ -53,7 +54,8 @@ export function WrongBinPopup({ removed, total, correctBin, onClose }: WrongBinP
           This one belongs in the <strong className="text-slate-900">{correctBin}</strong>.
         </p>
         <p className="mt-3 rounded-full bg-slate-200 px-4 py-1.5 text-sm font-bold text-slate-800">
-          {removed > 0 ? `🌧️ −${removed} point${removed === 1 ? "" : "s"}` : "🌧️ No points taken this time"} · Total: {total}
+          <PixelIcon name="rain" size={18} className="-mt-0.5 mr-1 align-middle" />
+          {removed > 0 ? `−${removed} point${removed === 1 ? "" : "s"}` : "No points taken this time"} · Total: {total}
         </p>
         <button
           ref={closeRef}

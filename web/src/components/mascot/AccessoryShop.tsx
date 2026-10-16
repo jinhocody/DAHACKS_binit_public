@@ -44,9 +44,15 @@ export function AccessoryShop() {
             Each accessory costs {ACCESSORY_PRICE} points. Earn points by scanning and sorting items.
           </p>
         </div>
-        <p className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-900">
-          🌱 {shop.balance} points to spend
-        </p>
+        {shop.spendable < 0 ? (
+          <p className="rounded-full bg-slate-200 px-4 py-2 text-sm font-bold text-slate-800">
+            🌧️ −{-shop.spendable} point{shop.spendable === -1 ? "" : "s"} · earn {-shop.spendable} to cheer up your plant
+          </p>
+        ) : (
+          <p className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-900">
+            🌱 {shop.balance} points to spend
+          </p>
+        )}
       </div>
 
       <p role="status" className="mt-3 min-h-5 text-sm font-medium text-emerald-800">

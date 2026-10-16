@@ -1,6 +1,7 @@
 import type { ScanResult } from "./scan-types";
+import { BINS, pointsFor } from "./sorting-config";
 
-type CannedItem = Omit<ScanResult, "source" | "note" | "confidence"> & {
+type CannedItem = Omit<ScanResult, "source" | "note" | "confidence" | "bin" | "points"> & {
   confidence: [number, number];
 };
 
@@ -9,7 +10,7 @@ const CANNED_ITEMS: CannedItem[] = [
     item: "Plastic water bottle",
     material: "PET plastic #1",
     category: "recycling",
-    bin: "Blue recycling cart",
+    reason: "Clean, empty plastic bottles are recyclable in Cupertino.",
     prepSteps: ["Empty any liquid", "Give it a quick rinse", "Put the cap back on"],
     confidence: [0.85, 0.97],
   },
@@ -17,58 +18,54 @@ const CANNED_ITEMS: CannedItem[] = [
     item: "Aluminum soda can",
     material: "Aluminum",
     category: "recycling",
-    bin: "Blue recycling cart",
-    prepSteps: ["Empty it completely", "Rinse out sticky residue", "Don't crush flat"],
+    reason: "Aluminum cans are accepted in the blue cart.",
+    prepSteps: ["Empty it completely", "Rinse out sticky residue"],
     confidence: [0.88, 0.98],
   },
   {
-    item: "Cardboard box",
-    material: "Corrugated cardboard",
-    category: "recycling",
-    bin: "Blue recycling cart",
-    prepSteps: ["Remove packing foam and plastic", "Flatten the box", "Keep it dry"],
+    item: "Greasy pizza box",
+    material: "Food-soiled cardboard",
+    category: "compost",
+    reason: "Food-soiled paper goes in the green organics cart.",
+    prepSteps: ["Scrape out leftover food", "Tear it to fit the cart"],
     confidence: [0.82, 0.95],
   },
   {
     item: "Banana peel",
     material: "Food scraps",
     category: "compost",
-    bin: "Green organics cart",
-    prepSteps: ["Remove any produce stickers", "Place in green cart or kitchen pail"],
+    reason: "Food scraps go in the green organics cart.",
+    prepSteps: ["Remove any produce stickers"],
     confidence: [0.86, 0.97],
   },
   {
     item: "AA battery",
     material: "Alkaline battery",
-    category: "hazardous",
-    bin: "Household hazardous waste drop-off",
-    prepSteps: [
-      "Never put in curbside carts",
-      "Tape the terminals",
-      "Take to an HHW drop-off or store collection box",
-    ],
+    category: "special",
+    reason: "Batteries can start fires and never go in a regular cart.",
+    prepSteps: ["Tape the terminals", "Take it to a household hazardous waste drop-off"],
     confidence: [0.8, 0.94],
   },
   {
     item: "Chip bag",
     material: "Multi-layer metallized plastic film",
-    category: "landfill",
-    bin: "Black/gray garbage cart",
-    prepSteps: ["Empty out crumbs", "Place in the garbage cart"],
+    category: "trash",
+    reason: "Mixed plastic film can't be recycled.",
+    prepSteps: ["Empty out crumbs"],
     confidence: [0.7, 0.9],
   },
   {
-    // Low confidence on purpose so the "Not sure?" picker can be demoed without a key.
-    item: "Plastic-lined paper cup",
-    material: "Paper with plastic (PE) lining",
-    category: "landfill",
-    bin: "Black/gray garbage cart",
-    prepSteps: ["Empty any liquid", "Recycle the lid separately if it's rigid plastic"],
+    // Mixed item, so the "Not sure?" flow can be demoed without a key.
+    item: "Coffee cup with plastic lid",
+    material: "Paper cup, plastic lid",
+    category: "uncertain",
+    reason: "The cup and lid go in different carts.",
+    prepSteps: ["Separate the lid from the cup", "Cup: green compost cart", "Lid: check the Recology guide"],
     confidence: [0.4, 0.55],
   },
 ];
 
-/** Returns a plausible random canned result. Purely in-memory; nothing is stored. */
+/** Returns a plausible random canned result. Purely in-memory; nothing is stored. Never earns points. */
 export function getMockScanResult(reason: string): ScanResult {
   const pick = CANNED_ITEMS[Math.floor(Math.random() * CANNED_ITEMS.length)];
   const [lo, hi] = pick.confidence;
@@ -77,10 +74,12 @@ export function getMockScanResult(reason: string): ScanResult {
     item: pick.item,
     material: pick.material,
     category: pick.category,
-    bin: pick.bin,
+    bin: BINS[pick.category],
+    reason: pick.reason,
     prepSteps: [...pick.prepSteps],
     confidence,
+    points: pointsFor(pick.category, "mock"),
     source: "mock",
-    note: `Simulated result — ${reason}. This is not based on your photo.`,
+    note: `Simulated result — ${reason}. This is not based on your photo, so it earns no points.`,
   };
 }

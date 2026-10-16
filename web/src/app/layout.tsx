@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     default: "SortSnap — Snap your trash. Know the bin.",
   },
   description:
-    "SortSnap uses AI to tell you which bin your trash belongs in. Snap a photo and get recycling, compost, landfill, hazardous or e-waste guidance in seconds.",
+    "SortSnap uses AI to tell you which bin your trash belongs in. Snap a photo and get Cupertino recycling, compost or trash guidance in seconds.",
   applicationName: "SortSnap",
 };
 

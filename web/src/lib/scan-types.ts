@@ -20,6 +20,21 @@ export interface ScanResult {
   aiGuess?: BinCategory;
   source: "gemini" | "mock";
   note?: string; // caveats, e.g. "rules vary locally"
+  /** Signed proof of this scan, sent back to /api/verify. Only present when the scan can earn points. */
+  ticket?: string;
+}
+
+/** POST /api/verify (multipart: ticket, binPhoto, insidePhoto) response. */
+export interface VerifyResult {
+  verified: boolean;
+  points: number; // points earned (0 unless verified)
+  reason: string; // shown to the user
+  /** What Gemini thinks the bin is, when it could tell. */
+  detectedBin?: BinCategory | "other";
+  /** Unique id of the scan ticket, so the same scan can't earn twice. */
+  ticketId?: string;
+  /** True when the AI was unavailable, so trying again later may work. */
+  retryable?: boolean;
 }
 
 export interface ScanError {

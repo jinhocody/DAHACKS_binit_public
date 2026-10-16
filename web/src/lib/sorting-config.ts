@@ -56,6 +56,12 @@ export const HELP: Record<Extract<WasteCategory, "special" | "uncertain">, HelpL
 export const AWARD_COOLDOWN_SECONDS = 10;
 export const REMEMBERED_PHOTOS = 50;
 
+/** Verification: points are only given after the bin + item-in-bin photos are checked. */
+export const VERIFY_WINDOW_MINUTES = 10; // a scan must be verified within this time
+export const VERIFY_MIN_CONFIDENCE = 0.6; // Gemini must be at least this sure the item is in the right bin
+export const VERIFY_MAX_ATTEMPTS = 2; // tries per scanned item
+export const DAILY_POINT_CAP = 50;
+
 export function isBinCategory(category: WasteCategory): category is BinCategory {
   return (BIN_CATEGORIES as WasteCategory[]).includes(category);
 }

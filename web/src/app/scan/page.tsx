@@ -13,7 +13,7 @@ export default function ScanPage() {
         <h1 className="text-2xl font-bold sm:text-3xl">Scan an item</h1>
         <p className="mt-1 text-sm opacity-75">
           Take a photo of something you want to toss. We&apos;ll tell you which bin it belongs in and how
-          to prep it (Santa Clara County rules).
+          to prep it (Cupertino rules). Verify it in the bin to earn points.
         </p>
       </header>
       <Scanner />

@@ -13,6 +13,20 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Scanning bar that sweeps up and down over a photo while the AI looks at it. */
+@theme {
+  --animate-scan-bar: scan-bar 1.4s ease-in-out infinite alternate;
+
+  @keyframes scan-bar {
+    from {
+      top: 0%;
+    }
+    to {
+      top: calc(100% - 4px);
+    }
+  }
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }

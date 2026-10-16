@@ -5,6 +5,7 @@ import type { ScanError, ScanResult } from "@/lib/scan-types";
 import { LiveCamera } from "./LiveCamera";
 import { resizeImage } from "./resize-image";
 import { ScanResultCard } from "./ScanResultCard";
+import { ScanningOverlay } from "./ScanningOverlay";
 import { hashPhoto } from "./points-store";
 
 type Status = "idle" | "loading" | "done" | "error";
@@ -192,19 +193,9 @@ export function Scanner() {
           <img
             src={previewUrl}
             alt="Photo of the item being scanned"
-            className={`mx-auto max-h-80 w-full object-contain transition ${loading ? "opacity-60" : ""}`}
+            className="mx-auto max-h-80 w-full object-contain"
           />
-          {loading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-              <span
-                className="h-12 w-12 animate-spin rounded-full border-4 border-white/70 border-t-green-600"
-                aria-hidden
-              />
-              <span className="rounded-full bg-white/90 px-3 py-1 text-sm font-medium text-gray-800" role="status">
-                Identifying your item…
-              </span>
-            </div>
-          )}
+          {loading && <ScanningOverlay label="Scanning your item…" />}
         </div>
       )}
 

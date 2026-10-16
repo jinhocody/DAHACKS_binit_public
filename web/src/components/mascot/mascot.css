@@ -1,0 +1,496 @@
+/* Pet-plant mascot (plain CSS; classes are prefixed with mascot- to stay out of the way). Layers: walker (position) > actor (hops) > flip (facing) > sprite (breathing) > parts. */
+
+.mascot-stage {
+  --size: min(300px, 66vw);
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+.mascot-walker {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  width: var(--size);
+  margin-left: calc(var(--size) / -2);
+  transition-property: transform;
+  transition-timing-function: linear;
+}
+
+.mascot-shadow {
+  position: absolute;
+  left: 50%;
+  top: 83%;
+  width: 34%;
+  height: 5%;
+  margin-left: -17%;
+  border-radius: 50%;
+  background: rgb(16 35 26 / 0.16);
+}
+
+.mascot-actor {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 24px;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mascot-actor:focus-visible {
+  outline: 3px solid rgb(16 185 129 / 0.6);
+  outline-offset: -12%;
+}
+
+.mascot-flip {
+  --face: 1;
+  position: absolute;
+  inset: 0;
+  transform: scaleX(var(--face));
+  transition: transform 0.28s ease;
+}
+
+.mascot-flip[data-facing="left"] {
+  --face: -1;
+}
+
+.mascot-sprite {
+  position: absolute;
+  inset: 0;
+  animation: mascot-breathe 2.6s ease-in-out infinite;
+}
+
+.mascot-part {
+  position: absolute;
+  inset: 0;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.mascot-top {
+  animation: mascot-sway 3.4s ease-in-out infinite alternate;
+}
+
+.mascot-arm {
+  animation: mascot-armBob 2.2s ease-in-out infinite alternate;
+}
+
+/* ---------- Actions (set via data-action on .mascot-walker) ---------- */
+
+.mascot-walker[data-action="hop"] .mascot-actor {
+  animation: mascot-hop 0.9s ease-in-out;
+}
+.mascot-walker[data-action="hop"] .mascot-shadow {
+  animation: mascot-shadowHop 0.9s ease-in-out;
+}
+
+.mascot-walker[data-action="jump"] .mascot-actor {
+  animation: mascot-jump 1s cubic-bezier(0.3, 0, 0.3, 1);
+}
+.mascot-walker[data-action="jump"] .mascot-shadow {
+  animation: mascot-shadowJump 1s cubic-bezier(0.3, 0, 0.3, 1);
+}
+
+.mascot-walker[data-action="spin"] .mascot-actor {
+  animation: mascot-jump 1s cubic-bezier(0.3, 0, 0.3, 1);
+}
+.mascot-walker[data-action="spin"] .mascot-shadow {
+  animation: mascot-shadowJump 1s cubic-bezier(0.3, 0, 0.3, 1);
+}
+.mascot-walker[data-action="spin"] .mascot-flip {
+  animation: mascot-spin 0.8s ease-in-out 0.12s;
+}
+
+.mascot-walker[data-action="wiggle"] .mascot-actor {
+  animation: mascot-wiggle 0.8s ease-in-out;
+}
+
+.mascot-walker[data-action="walk"] .mascot-actor {
+  animation: mascot-waddle 0.5s ease-in-out infinite;
+}
+
+.mascot-walker[data-action="wave"] .mascot-arm {
+  animation: mascot-wave 1.4s ease-in-out;
+}
+.mascot-walker[data-action="wave"] .mascot-top {
+  animation: mascot-leafPerk 1.4s ease-in-out;
+}
+
+.mascot-walker[data-action="water"] .mascot-arm {
+  animation: mascot-water 2.2s ease-in-out;
+}
+
+.mascot-walker[data-action="dance"] .mascot-actor {
+  animation: mascot-dance 2.6s ease-in-out;
+}
+.mascot-walker[data-action="dance"] .mascot-shadow {
+  animation: mascot-shadowDance 2.6s ease-in-out;
+}
+.mascot-walker[data-action="dance"] .mascot-arm {
+  animation: mascot-wave 1.3s ease-in-out 2;
+}
+.mascot-walker[data-action="dance"] .mascot-top {
+  animation: mascot-leafPerk 0.65s ease-in-out 4;
+}
+
+/* ---------- Effects ---------- */
+
+.mascot-drop {
+  position: absolute;
+  width: 1.6%;
+  height: 2.4%;
+  background: #5bb8e0;
+  box-shadow: inset 0 -2px 0 #3b82b6;
+  opacity: 0;
+  animation: mascot-drip 0.75s linear infinite;
+  animation-delay: var(--delay);
+  margin-left: var(--dx);
+}
+
+.mascot-heart {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: 9%;
+  opacity: 0;
+  animation: mascot-floatUp 1.3s ease-out forwards;
+  animation-delay: var(--delay);
+  pointer-events: none;
+}
+
+.mascot-bubble {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  white-space: nowrap;
+  border-radius: 9999px;
+  background: white;
+  padding: 0.35rem 0.85rem;
+  font-weight: 800;
+  color: #065f46;
+  box-shadow: 0 4px 14px rgb(16 35 26 / 0.15);
+  animation: mascot-pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes mascot-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.025, 0.97);
+  }
+}
+
+@keyframes mascot-sway {
+  from {
+    transform: rotate(calc(var(--sway) * -1));
+  }
+  to {
+    transform: rotate(var(--sway));
+  }
+}
+
+@keyframes mascot-armBob {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes mascot-hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  18% {
+    transform: translateY(0) scale(1.14, 0.84);
+  }
+  40% {
+    transform: translateY(-18%) scale(0.9, 1.12);
+  }
+  58% {
+    transform: translateY(-19%) scale(1, 1);
+  }
+  78% {
+    transform: translateY(0) scale(1.16, 0.82);
+  }
+  90% {
+    transform: translateY(0) scale(0.96, 1.05);
+  }
+}
+
+@keyframes mascot-shadowHop {
+  0%,
+  18%,
+  78%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.6);
+    opacity: 0.6;
+  }
+}
+
+@keyframes mascot-jump {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  14% {
+    transform: translateY(0) scale(1.2, 0.78);
+  }
+  45% {
+    transform: translateY(-28%) scale(0.88, 1.14);
+  }
+  60% {
+    transform: translateY(-30%) scale(1, 1);
+  }
+  82% {
+    transform: translateY(0) scale(1.18, 0.8);
+  }
+  92% {
+    transform: translateY(0) scale(0.95, 1.06);
+  }
+}
+
+@keyframes mascot-shadowJump {
+  0%,
+  14%,
+  82%,
+  100% {
+    transform: scale(1);
+  }
+  52% {
+    transform: scale(0.45);
+    opacity: 0.5;
+  }
+}
+
+@keyframes mascot-spin {
+  from {
+    transform: scaleX(var(--face)) rotateY(0deg);
+  }
+  to {
+    transform: scaleX(var(--face)) rotateY(360deg);
+  }
+}
+
+@keyframes mascot-wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(-8deg);
+  }
+  40% {
+    transform: rotate(7deg);
+  }
+  60% {
+    transform: rotate(-5deg);
+  }
+  80% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes mascot-waddle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  25% {
+    transform: translateY(-5%) rotate(0deg);
+  }
+  50% {
+    transform: translateY(0) rotate(4deg);
+  }
+  75% {
+    transform: translateY(-5%) rotate(0deg);
+  }
+}
+
+@keyframes mascot-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(24deg);
+  }
+  35% {
+    transform: rotate(10deg);
+  }
+  50% {
+    transform: rotate(24deg);
+  }
+  65% {
+    transform: rotate(10deg);
+  }
+  80% {
+    transform: rotate(24deg);
+  }
+}
+
+@keyframes mascot-leafPerk {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(calc(var(--sway) * 1.6));
+  }
+  65% {
+    transform: rotate(calc(var(--sway) * -1));
+  }
+}
+
+@keyframes mascot-water {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20%,
+  80% {
+    transform: rotate(-60deg);
+  }
+  40% {
+    transform: rotate(-55deg);
+  }
+  60% {
+    transform: rotate(-63deg);
+  }
+}
+
+@keyframes mascot-dance {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0) scale(1, 1);
+  }
+  10% {
+    transform: translateY(0) rotate(0) scale(1.14, 0.84);
+  }
+  20% {
+    transform: translateY(-16%) rotate(-10deg) scale(0.92, 1.1);
+  }
+  30% {
+    transform: translateY(0) rotate(0) scale(1.12, 0.86);
+  }
+  40% {
+    transform: translateY(-16%) rotate(10deg) scale(0.92, 1.1);
+  }
+  50% {
+    transform: translateY(0) rotate(0) scale(1.12, 0.86);
+  }
+  62% {
+    transform: translateY(-24%) rotate(0) scale(0.9, 1.12);
+  }
+  75% {
+    transform: translateY(0) rotate(0) scale(1.16, 0.82);
+  }
+  85% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  93% {
+    transform: translateY(0) rotate(6deg);
+  }
+}
+
+@keyframes mascot-shadowDance {
+  0%,
+  10%,
+  30%,
+  50%,
+  75%,
+  100% {
+    transform: scale(1);
+  }
+  20%,
+  40% {
+    transform: scale(0.7);
+  }
+  62% {
+    transform: scale(0.55);
+  }
+}
+
+@keyframes mascot-drip {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(1700%);
+  }
+}
+
+@keyframes mascot-floatUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--dx) * 0.3), -40%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), -320%) scale(0.9);
+  }
+}
+
+@keyframes mascot-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 30%) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-sprite,
+  .mascot-arm,
+  .mascot-actor,
+  .mascot-shadow,
+  .mascot-flip,
+  .mascot-walker[data-action] .mascot-actor,
+  .mascot-walker[data-action] .mascot-arm,
+  .mascot-walker[data-action] .mascot-flip,
+  .mascot-walker[data-action] .mascot-shadow {
+    animation: none !important;
+  }
+  .mascot-top {
+    animation-duration: 7s;
+  }
+  .mascot-walker,
+  .mascot-flip {
+    transition: none;
+  }
+  .mascot-drop {
+    display: none;
+  }
+}

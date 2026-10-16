@@ -1,3 +1,4 @@
+import { Mascot } from "@/components/mascot/Mascot";
 import { Button } from "@/components/ui/Button";
 
 export default function Home() {
@@ -12,7 +13,8 @@ export default function Home() {
         aria-label="Pet plant character"
         className="flex min-h-[60vh] flex-1 rounded-3xl border-2 border-dashed border-emerald-200 bg-emerald-50/40"
       >
-        {/* Character section: to be designed later */}
+        {/* Accessory looks ("flower", "straw", "gold") will be picked by the accessory rules later. */}
+        <Mascot look="base" />
       </section>
     </div>
   );

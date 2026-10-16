@@ -83,6 +83,11 @@
   animation: mascot-armBob 2.2s ease-in-out infinite alternate;
 }
 
+/* Shop thumbnails: same layers, no motion. */
+.mascot-static .mascot-part {
+  animation: none;
+}
+
 /* ---------- Actions (set via data-action on .mascot-walker) ---------- */
 
 .mascot-walker[data-action="hop"] .mascot-actor {

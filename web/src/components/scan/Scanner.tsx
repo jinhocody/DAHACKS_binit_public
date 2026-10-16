@@ -68,28 +68,44 @@ export function Scanner() {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file
     if (!file) return;
+
+    setLastBlob(null);
+    setResult(null);
+    setError(null);
+
     if (!file.type.startsWith("image/")) {
       setPreview(null);
       setError("That file isn't an image. Please choose a photo.");
       setStatus("error");
-      setLastBlob(null);
       return;
     }
 
     setPreview(URL.createObjectURL(file));
     setStatus("loading");
-    setResult(null);
-    setError(null);
 
-    const blob = await resizeImage(file);
-    if (blob.size > MAX_UPLOAD_BYTES) {
-      setLastBlob(null);
-      setError("That image is too large (max 4MB). Try a smaller photo.");
+    try {
+      const blob = await resizeImage(file);
+
+      if (blob.size === 0) {
+        setError("That image is empty. Please choose another photo.");
+        setStatus("error");
+        return;
+      }
+
+      if (blob.size > MAX_UPLOAD_BYTES) {
+        setError("That image is too large (max 4MB). Try a smaller photo.");
+        setStatus("error");
+        return;
+      }
+
+      setLastBlob(blob);
+      await scan(blob);
+    } catch {
+      setError(
+        "Couldn't process this image. Try another photo or a JPEG/PNG file.",
+      );
       setStatus("error");
-      return;
     }
-    setLastBlob(blob);
-    await scan(blob);
   }
 
   function reset() {

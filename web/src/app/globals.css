@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f3faf6;
+  --background: #f7e9cf;
   --foreground: #10231a;
   color-scheme: light;
 }
@@ -21,4 +21,27 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Pixel-art scene pinned behind every page (a fixed layer, since iOS ignores background-attachment: fixed). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--background) url("/bg/portrait.png") center bottom / cover no-repeat;
+  image-rendering: pixelated;
+}
+
+/* On phones, end the scene above the fixed bottom tab bar so the ground strip stays visible. */
+@media (max-width: 639px) {
+  body::before {
+    bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (orientation: landscape) {
+  body::before {
+    background-image: url("/bg/landscape.png");
+  }
 }

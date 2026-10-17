@@ -73,6 +73,12 @@
   --foreground: #18291f;
   --pixel-ink: #2b4434;
   --pixel-ink-soft: rgb(43 68 52 / 0.35);
+
+  /* Header sky + cloud outline. */
+  --sky-top: #b9dbe0;
+  --sky-bottom: #e4efdc;
+  --sky-cloud-line: #c3d6d4;
+  --sky-cloud-back: #eef3e6;
 }
 
 /* Fixed landscape behind everything; the sand path stays anchored at the bottom. */
@@ -154,6 +160,30 @@ button:not(.no-pixel):not(.mascot-actor):focus-visible,
   outline-offset: 3px;
 }
 
+/* Header: pale pixel sky, banded instead of a smooth gradient. */
+.header-sky {
+  background: linear-gradient(
+    to bottom,
+    var(--sky-top) 0 34%,
+    color-mix(in srgb, var(--sky-top), var(--sky-bottom)) 34% 62%,
+    var(--sky-bottom) 62%
+  );
+}
+
+/* Small sky clouds drift back and forth in whole-pixel steps. */
+.animate-cloud-drift {
+  animation: cloud-drift 18s steps(12) infinite alternate;
+}
+
+@keyframes cloud-drift {
+  from {
+    transform: translateX(-12px);
+  }
+  to {
+    transform: translateX(12px);
+  }
+}
+
 /* Pixel icons scale in whole pixels. */
 .pixel-icon {
   image-rendering: pixelated;
@@ -164,5 +194,8 @@ button:not(.no-pixel):not(.mascot-actor):focus-visible,
   button:not(.no-pixel):not(.mascot-actor),
   .pixel-btn {
     transition: none;
+  }
+  .animate-cloud-drift {
+    animation: none;
   }
 }

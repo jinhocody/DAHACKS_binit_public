@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
 import type { ScanError, ScanResult } from "@/lib/scan-types";
+import { ScanIcon } from "@/components/pixel/ScanIcon";
 import { LiveCamera } from "./LiveCamera";
 import { resizeImage } from "./resize-image";
 import { ScanResultCard } from "./ScanResultCard";
@@ -181,9 +182,7 @@ export function Scanner() {
                 onClick={() => cameraInputRef.current?.click()}
                 className="flex min-h-32 w-full flex-col items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-6 text-white shadow-md transition hover:bg-green-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300"
               >
-                <span className="text-4xl" aria-hidden>
-                  📷
-                </span>
+                <ScanIcon size={48} />
                 <span className="text-lg font-bold">Take photo / Upload</span>
                 <span className="text-sm text-green-50">Snap the item you want to throw away</span>
               </button>
@@ -194,7 +193,7 @@ export function Scanner() {
             onClick={() => uploadInputRef.current?.click()}
             className="min-h-11 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-800 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gray-200"
           >
-            🖼️ Choose an image from your device
+            Choose an image from your device
           </button>
           <p className="text-center text-xs text-gray-500">
             Photos are analyzed in memory and never stored.

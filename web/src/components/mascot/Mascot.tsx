@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { getPointsTotal } from "@/components/scan/points-store";
 import { BASE_PIVOT, origin, spoutPosition, type Outfit } from "./looks";
 import { useShop } from "./outfit-store";
@@ -8,9 +8,9 @@ import { SpriteLayers } from "./SpriteLayers";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import "./mascot.css";
 
-type Action = "idle" | "hop" | "jump" | "spin" | "wiggle" | "walk" | "wave" | "water" | "dance" | "look";
+type Action = "idle" | "hop" | "jump" | "spin" | "wiggle" | "walk" | "wave" | "water" | "dance" | "look" | "drag";
 
-const ACTION_MS: Record<Exclude<Action, "idle" | "walk" | "look">, number> = {
+const ACTION_MS: Record<Exclude<Action, "idle" | "walk" | "look" | "drag">, number> = {
   hop: 900,
   jump: 1000,
   spin: 1000,
@@ -25,6 +25,19 @@ const RANDOM_ACTIONS: Action[] = ["walk", "walk", "walk", "hop", "hop", "wiggle"
 
 const LAST_SEEN_KEY = "sortsnap:mascot:lastSeenPoints";
 const WALK_PX_PER_SECOND = 70;
+const DRAG_START_PX = 6; // movement needed before a press becomes a drag (a smaller one is a tap)
+const DROP_MS = 350; // fall back to the ground after being let go
+
+interface Drag {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  baseX: number;
+  baseY: number;
+  moved: boolean;
+}
+
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
 interface Heart {
   id: number;
@@ -44,6 +57,7 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
   const [action, setAction] = useState<Action>("idle");
   const [facing, setFacing] = useState<"right" | "left">("right");
   const [x, setX] = useState(0);
+  const [y, setY] = useState(0);
   const [walkMs, setWalkMs] = useState(0);
   const [hearts, setHearts] = useState<Heart[]>([]);
   const [bubble, setBubble] = useState<string | null>(null);
@@ -51,6 +65,9 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const walkerRef = useRef<HTMLDivElement>(null);
   const xRef = useRef(0);
+  const yRef = useRef(0);
+  const dragRef = useRef<Drag | null>(null);
+  const suppressClickRef = useRef(false);
   const busyRef = useRef(false);
   const tokenRef = useRef(0);
   const heartIdRef = useRef(0);
@@ -191,8 +208,67 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
   }, []);
 
   function onPet() {
+    if (suppressClickRef.current) return; // the press was a drag, not a tap
     burstHearts(5);
     play(Math.random() < 0.35 ? "spin" : "jump", ACTION_MS.jump);
+  }
+
+  // Press and drag (finger or mouse) to carry the plant around the stage.
+  function onPointerDown(e: PointerEvent<HTMLButtonElement>) {
+    if (e.button !== 0 || dragRef.current) return;
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      baseX: xRef.current,
+      baseY: yRef.current,
+      moved: false,
+    };
+  }
+
+  function onPointerMove(e: PointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current;
+    const stage = stageRef.current;
+    const walker = walkerRef.current;
+    if (!drag || drag.pointerId !== e.pointerId || !stage || !walker) return;
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
+    if (!drag.moved) {
+      if (Math.hypot(dx, dy) < DRAG_START_PX) return;
+      drag.moved = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      tokenRef.current++; // cancel whatever it was doing
+      busyRef.current = true;
+      setWalkMs(0);
+      setAction("drag");
+    }
+    // Same side margins as walking; up to the top of the stage, never below the ground.
+    const rangeX = Math.max(0, (stage.clientWidth - walker.offsetWidth * 0.7) / 2);
+    const maxUp = Math.max(0, stage.clientHeight - walker.offsetHeight);
+    const nextX = clamp(drag.baseX + dx, -rangeX, rangeX);
+    const nextY = clamp(drag.baseY + dy, -maxUp, 0);
+    if (Math.abs(e.movementX) > 1) setFacing(e.movementX > 0 ? "right" : "left");
+    xRef.current = nextX;
+    yRef.current = nextY;
+    setX(nextX);
+    setY(nextY);
+  }
+
+  function onPointerEnd(e: PointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    dragRef.current = null;
+    if (!drag.moved) return; // a tap: onClick pets it
+    // The browser may still fire a click for this press; ignore it.
+    suppressClickRef.current = true;
+    later(() => (suppressClickRef.current = false), 0);
+    // Let go: fall back to the ground and land with a hop.
+    yRef.current = 0;
+    setY(0);
+    setWalkMs(DROP_MS);
+    busyRef.current = false;
+    setAction("idle");
+    later(() => play("hop", ACTION_MS.hop), DROP_MS);
   }
 
   return (
@@ -201,7 +277,11 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
         ref={walkerRef}
         className="mascot-walker"
         data-action={action}
-        style={{ transform: `translateX(${x}px)`, transitionDuration: `${walkMs}ms` }}
+        style={{
+          transform: `translate(${x}px, ${y}px)`,
+          transitionDuration: `${walkMs}ms`,
+          transitionTimingFunction: action === "walk" ? "linear" : "ease-in",
+        }}
       >
         <div className="mascot-shadow" aria-hidden="true" />
         <button
@@ -209,7 +289,11 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
           className="mascot-actor"
           style={{ transformOrigin: origin(BASE_PIVOT) }}
           onClick={onPet}
-          aria-label="Pet the plant"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerEnd}
+          onPointerCancel={onPointerEnd}
+          aria-label="Pet the plant (press and drag to move it)"
         >
           <div className="mascot-flip" data-facing={facing}>
             <div className="mascot-sprite" style={{ transformOrigin: origin(BASE_PIVOT) }}>

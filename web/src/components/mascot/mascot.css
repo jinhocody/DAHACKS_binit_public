@@ -1,7 +1,7 @@
 /* Pet-plant mascot (plain CSS; classes are prefixed with mascot- to stay out of the way). Layers: walker (position) > actor (hops) > flip (facing) > sprite (breathing) > parts. */
 
 .mascot-stage {
-  --size: min(300px, 66vw);
+  --size: min(420px, 88vw);
   position: relative;
   flex: 1;
   width: 100%;
@@ -39,7 +39,8 @@
   border: 0;
   border-radius: 24px;
   background: none;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none; /* a finger on the plant drags it instead of scrolling the page */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -89,6 +90,16 @@
 }
 
 /* ---------- Actions (set via data-action on .mascot-walker) ---------- */
+
+/* Picked up with a finger or mouse: lifted and tilted, shadow left on the ground. */
+.mascot-walker[data-action="drag"] .mascot-actor {
+  cursor: grabbing;
+  transform: scale(1.06) rotate(-5deg);
+  transition: transform 120ms ease-out;
+}
+.mascot-walker[data-action="drag"] .mascot-shadow {
+  opacity: 0.35;
+}
 
 .mascot-walker[data-action="hop"] .mascot-actor {
   animation: mascot-hop 0.9s ease-in-out;

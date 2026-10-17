@@ -13,7 +13,7 @@ export default function Home() {
       <section
         id="character"
         aria-label="Pet plant character"
-        className="flex min-h-[60vh] flex-1 border-2 border-emerald-900/40 bg-white/15"
+        className="flex min-h-[60vh] flex-1 border-2 border-transparent bg-white/15"
       >
         {/* Happy plant wearing the shop outfit, or the sad rainy plant while points are below 0. */}
         <HomeMascot />

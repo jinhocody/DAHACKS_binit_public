@@ -67,7 +67,7 @@ const part = (clip: string, extra?: CSSProperties): CSSProperties => ({
 });
 
 /** The sad, rained-on plant. Pure CSS animation; `size` is any CSS length. */
-export function SadMascot({ size = "min(300px, 66vw)" }: { size?: string }) {
+export function SadMascot({ size = "min(420px, 88vw)" }: { size?: string }) {
   return (
     <div className="mascot-sad" style={{ ["--size" as string]: size }} role="img" aria-label="A sad plant under a rain cloud">
       <div className="mascot-sad-puddle" />

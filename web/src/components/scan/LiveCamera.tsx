@@ -1,6 +1,7 @@
 "use client";
 
 // Live in-page camera viewfinder with a shutter button and "hold steady" auto-capture.
+// Nothing is captured until the user taps "Are you ready?", so a half-framed shot can't snap by accident.
 // Frames never leave the browser until a capture is handed to onCapture.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ScanIcon } from "@/components/pixel/ScanIcon";
@@ -38,6 +39,7 @@ export function LiveCamera({ guide, onCapture, autoCapture = true, disabled = fa
   const [state, setState] = useState<CameraState>("starting");
   const [problem, setProblem] = useState<string | null>(null);
   const [progress, setProgress] = useState(0); // 0–1 countdown ring
+  const [ready, setReady] = useState(false);
   const capturingRef = useRef(false);
   const onCaptureRef = useRef(onCapture);
 
@@ -91,7 +93,7 @@ export function LiveCamera({ guide, onCapture, autoCapture = true, disabled = fa
 
   // Auto-capture once the picture has been steady for a moment.
   useEffect(() => {
-    if (state !== "live" || !autoCapture || disabled) return;
+    if (state !== "live" || !ready || !autoCapture || disabled) return;
     const canvas = document.createElement("canvas");
     canvas.width = THUMB;
     canvas.height = THUMB;
@@ -130,7 +132,7 @@ export function LiveCamera({ guide, onCapture, autoCapture = true, disabled = fa
     }, TICK_MS);
 
     return () => window.clearInterval(timer);
-  }, [state, autoCapture, disabled]);
+  }, [state, ready, autoCapture, disabled]);
 
   if (state === "unavailable") {
     return (
@@ -171,7 +173,21 @@ export function LiveCamera({ guide, onCapture, autoCapture = true, disabled = fa
         </p>
       )}
 
-      {state === "live" && (
+      {state === "live" && !ready && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/45 px-6 text-center">
+          <p className="max-w-60 text-sm text-white">Get the shot lined up first. Scanning starts when you tap.</p>
+          <button
+            type="button"
+            onClick={() => setReady(true)}
+            disabled={disabled}
+            className="min-h-14 bg-emerald-600 px-8 py-3 text-xl text-white hover:bg-emerald-700 disabled:opacity-50"
+          >
+            Are you ready?
+          </button>
+        </div>
+      )}
+
+      {state === "live" && ready && (
         <div className="absolute inset-x-0 bottom-4 flex flex-col items-center gap-2">
           {autoCapture && !disabled && (
             <p className="rounded-full bg-black/60 px-3 py-1 text-xs text-white" role="status">

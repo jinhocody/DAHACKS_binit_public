@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
+import { ScanIcon } from "@/components/pixel/ScanIcon";
 
 export const NAV_ITEMS = [
   { href: "/", label: "Home", icon: "home" },
@@ -63,7 +64,7 @@ export function MobileNavLinks({ pathname }: { pathname: string | null }) {
                   active ? "bg-emerald-100" : ""
                 }`}
               >
-                <PixelIcon name={item.icon} size={24} />
+                {item.icon === "camera" ? <ScanIcon size={24} /> : <PixelIcon name={item.icon} size={24} />}
               </span>
               {item.label}
             </Link>

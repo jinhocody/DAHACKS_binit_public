@@ -3,6 +3,7 @@
 // Live in-page camera viewfinder with a shutter button and "hold steady" auto-capture.
 // Frames never leave the browser until a capture is handed to onCapture.
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ScanIcon } from "@/components/pixel/ScanIcon";
 import { toJpeg } from "./resize-image";
 
 const TICK_MS = 250;
@@ -136,7 +137,7 @@ export function LiveCamera({ guide, onCapture, autoCapture = true, disabled = fa
       <div className="flex flex-col gap-3">
         {problem && (
           <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            📷 {problem} You can allow camera access in your browser settings and reload.
+            <ScanIcon size={16} className="align-text-bottom" /> {problem} You can allow camera access in your browser settings and reload.
           </p>
         )}
         {fallback}

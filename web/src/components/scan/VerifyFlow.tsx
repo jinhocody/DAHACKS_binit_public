@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { BinCategory, VerifyResult } from "@/lib/scan-types";
 import { BINS, DAILY_POINT_CAP, VERIFY_MAX_ATTEMPTS, VERIFY_WINDOW_MINUTES, WRONG_BIN_PENALTY } from "@/lib/sorting-config";
 import { awardVerified, deductWrongBin, hashPhoto, type AwardOutcome, type PenaltyOutcome } from "./points-store";
+import { ScanIcon } from "@/components/pixel/ScanIcon";
 import { LiveCamera } from "./LiveCamera";
 import { WrongBinPopup } from "@/components/mascot/WrongBinPopup";
 import { ScanningOverlay } from "./ScanningOverlay";
@@ -137,8 +138,8 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
                     // eslint-disable-next-line @next/next/no-img-element -- local blob preview
                     <img src={photo.url} alt={title} className="aspect-[4/3] w-full rounded-lg object-cover" />
                   ) : (
-                    <div className="flex aspect-[4/3] w-full items-center justify-center text-2xl" aria-hidden>
-                      📷
+                    <div className="flex aspect-[4/3] w-full items-center justify-center" aria-hidden>
+                      <ScanIcon size={48} />
                     </div>
                   )}
                   <p className="mt-1 truncate font-semibold text-emerald-950">{title}</p>

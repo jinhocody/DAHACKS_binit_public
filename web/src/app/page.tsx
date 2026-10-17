@@ -1,13 +1,13 @@
 import { AccessoryShop } from "@/components/mascot/AccessoryShop";
 import { HomeMascot } from "@/components/mascot/HomeMascot";
 import { Button } from "@/components/ui/Button";
-import { PixelIcon } from "@/components/pixel/PixelIcon";
+import { ScanIcon } from "@/components/pixel/ScanIcon";
 
 export default function Home() {
   return (
     <div className="flex min-h-[70vh] flex-col gap-6">
       <Button href="/scan" size="lg" className="w-full shadow-md">
-        <PixelIcon name="camera" size={24} light="transparent" /> Scan Item
+        <ScanIcon size={32} /> Scan Item
       </Button>
 
       <section

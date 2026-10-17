@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       return fail(check.reason || "Couldn't tell from these photos. Try clearer ones.", 200, base);
     }
     if (check.binCategory === "other") {
-      return fail(`That doesn't look like a sorting cart — this goes in the ${BINS[data.category]}.`, 200, base);
+      return fail(`That doesn't look like a waste bin — this goes in the ${BINS[data.category]}.`, 200, base);
     }
     if (check.binCategory !== data.category) {
       return fail(`That's the ${BINS[check.binCategory]} — this goes in the ${BINS[data.category]}.`, 200, {

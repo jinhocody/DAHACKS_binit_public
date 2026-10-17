@@ -11,7 +11,7 @@ export interface ScanResult {
   item: string; // "Plastic water bottle"
   material: string; // "PET plastic #1"
   category: WasteCategory;
-  bin: string | null; // "Blue recycling cart", null for special/uncertain
+  bin: string | null; // "Recycling bin", null for special/uncertain
   reason: string; // why it goes there
   prepSteps: string[]; // ["Empty it", "Rinse", "Cap on"]
   confidence: number; // 0–1

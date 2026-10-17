@@ -23,11 +23,14 @@ export const POINTS: Record<WasteCategory, number> = {
   uncertain: 0,
 };
 
-/** Bin shown for each result; null means "no curbside bin". */
+/**
+ * Bin shown for each result; null means "no curbside bin". Named by kind, not color: public and campus
+ * bins often aren't color-coded (home carts here are blue / green / gray).
+ */
 export const BINS: Record<WasteCategory, string | null> = {
-  recycling: "Blue recycling cart",
-  compost: "Green organics cart",
-  trash: "Gray garbage cart",
+  recycling: "Recycling bin",
+  compost: "Compost bin",
+  trash: "Trash (landfill) bin",
   special: null,
   uncertain: null,
 };

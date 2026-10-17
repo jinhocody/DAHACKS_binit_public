@@ -16,7 +16,7 @@ const HOME_REDIRECT_MS = 3000;
 type Photo = { blob: Blob; url: string };
 
 const SLOTS: { key: Slot; title: string; hint: string }[] = [
-  { key: "bin", title: "1. Photo of the bin", hint: "Show the whole cart so its color is clear" },
+  { key: "bin", title: "1. Photo of the bin", hint: "Show the whole bin and its label or sign" },
   { key: "inside", title: "2. Item inside the bin", hint: "Open the lid and show your item in it" },
 ];
 

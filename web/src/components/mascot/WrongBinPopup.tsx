@@ -9,7 +9,7 @@ interface WrongBinPopupProps {
   /** Points actually removed (0 when this scan was already penalized). */
   removed: number;
   total: number;
-  /** Where the item should have gone, e.g. "Blue recycling cart". */
+  /** Where the item should have gone, e.g. "Recycling bin". */
   correctBin: string;
   onClose: () => void;
 }

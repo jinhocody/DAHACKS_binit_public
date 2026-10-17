@@ -6,10 +6,10 @@ import { PixelIcon, type PixelIconName } from "@/components/pixel/PixelIcon";
 
 export const metadata: Metadata = {
   title: "Rewards",
-  description: "Your Snap points: earn them by sorting right. Redeeming rewards is coming soon.",
+  description: "Your Snap points: earn them by sorting right.",
 };
 
-// light = main fill, shade = accent (flame core, gift ribbon).
+// light = main fill, shade = accent (flame core).
 const PERKS: { icon: PixelIconName; light: string; shade?: string; title: string; body: string }[] = [
   {
     icon: "star",
@@ -24,32 +24,22 @@ const PERKS: { icon: PixelIconName; light: string; shade?: string; title: string
     title: "Keep a streak",
     body: "Sort something every day to build streaks and unlock bonus points.",
   },
-  {
-    icon: "gift",
-    light: "#f87171",
-    shade: "#facc15",
-    title: "Redeem rewards",
-    body: "Trade points for perks from local eco-friendly partners.",
-  },
 ];
 
 export default function RewardsPage() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <p className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800">
-          Coming soon
-        </p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-emerald-950">Rewards</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-emerald-950">Rewards</h1>
         <p className="mt-2 max-w-xl text-gray-600">
           Recycling right should feel good. You earn points for every correctly sorted item and can spend
-          them on skins for your plant. Redeeming them for rewards is coming soon.
+          them on skins for your plant.
         </p>
       </header>
 
       <PointsSummary />
 
-      <ul className="grid gap-4 sm:grid-cols-3">
+      <ul className="grid gap-4 sm:grid-cols-2">
         {PERKS.map((perk) => (
           <li key={perk.title}>
             <Card className="h-full">

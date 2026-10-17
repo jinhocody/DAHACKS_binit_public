@@ -3,6 +3,7 @@
 // Live points card for the Rewards page: points to spend (earned minus spent on skins), which can go
 // below 0 after wrong-bin penalties, plus how they add up.
 import { Card } from "@/components/ui/Card";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { useShop } from "./outfit-store";
 
 export function PointsSummary() {
@@ -28,9 +29,7 @@ export function PointsSummary() {
           <p className="mt-1 text-xs font-semibold">Sort items correctly to get back above 0 and cheer up your plant.</p>
         )}
       </div>
-      <span aria-hidden="true" className="text-5xl">
-        {negative ? "🌧️" : "🏆"}
-      </span>
+      <PixelIcon name={negative ? "rain" : "trophy"} size={48} light="transparent" className="text-white" />
     </Card>
   );
 }

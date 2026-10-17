@@ -2,25 +2,26 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PointsSummary } from "@/components/mascot/PointsSummary";
+import { PixelIcon, type PixelIconName } from "@/components/pixel/PixelIcon";
 
 export const metadata: Metadata = {
   title: "Rewards",
   description: "Your Snap points: earn them by sorting right. Redeeming rewards is coming soon.",
 };
 
-const PERKS = [
+const PERKS: { icon: PixelIconName; title: string; body: string }[] = [
   {
-    emoji: "⭐",
+    icon: "star",
     title: "Earn points",
     body: "Get points every time you scan an item and sort it into the right bin.",
   },
   {
-    emoji: "🔥",
+    icon: "flame",
     title: "Keep a streak",
     body: "Sort something every day to build streaks and unlock bonus points.",
   },
   {
-    emoji: "🎁",
+    icon: "gift",
     title: "Redeem rewards",
     body: "Trade points for perks from local eco-friendly partners.",
   },
@@ -46,9 +47,7 @@ export default function RewardsPage() {
         {PERKS.map((perk) => (
           <li key={perk.title}>
             <Card className="h-full">
-              <span aria-hidden="true" className="text-3xl">
-                {perk.emoji}
-              </span>
+              <PixelIcon name={perk.icon} size={32} className="text-emerald-900" />
               <h2 className="mt-2 text-lg font-bold text-emerald-950">{perk.title}</h2>
               <p className="mt-1 text-sm leading-6 text-gray-600">{perk.body}</p>
             </Card>

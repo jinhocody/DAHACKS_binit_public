@@ -3,7 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { checkInactivity, POINTS_EVENT, takePendingPopups, type PointsEvent } from "@/components/scan/points-store";
-import { STREAK_DAYS } from "@/lib/sorting-config";
+import { LEVEL_THRESHOLDS, MAX_LEVEL, STREAK_DAYS } from "@/lib/sorting-config";
+import { LevelChange } from "./LevelChange";
 import { PointsPopup } from "./PointsPopup";
 
 /**
@@ -36,6 +37,28 @@ export function PointsEvents() {
     setQueue((q) => q.slice(1));
     if (pathname !== "/") router.push("/");
   };
+
+  if (current.kind === "level" && current.level && current.from) {
+    const { level, from } = current;
+    const up = level > from;
+    const message = up
+      ? level >= MAX_LEVEL
+        ? "Max level! Your plant is fully grown."
+        : `Your plant grew! Keep sorting to reach Lvl. ${level + 1}.`
+      : `Earn ${LEVEL_THRESHOLDS[from - 1] - current.total} more point${LEVEL_THRESHOLDS[from - 1] - current.total === 1 ? "" : "s"} to get Lvl. ${from} back.`;
+    return (
+      <PointsPopup
+        key={current.id}
+        mood={up ? "happy" : "sad"}
+        title={up ? "Level up!" : "Level down…"}
+        hero={<LevelChange from={from} to={level} />}
+        value={<p className={`points-delta-value mt-2 ${up ? "points-delta-gain" : "points-delta-loss"}`}>Lvl. {level}</p>}
+        message={message}
+        buttonLabel={up ? "Yay!" : "Got it"}
+        onClose={close}
+      />
+    );
+  }
 
   return current.kind === "streak" ? (
     <PointsPopup

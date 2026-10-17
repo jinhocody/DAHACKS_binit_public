@@ -1,6 +1,7 @@
 import { AccessoryShop } from "@/components/mascot/AccessoryShop";
 import { ActivityBanner } from "@/components/mascot/ActivityBanner";
 import { HomeMascot } from "@/components/mascot/HomeMascot";
+import { LevelBadge } from "@/components/mascot/LevelBadge";
 import { Button } from "@/components/ui/Button";
 import { ScanIcon } from "@/components/pixel/ScanIcon";
 
@@ -16,10 +17,11 @@ export default function Home() {
       <section
         id="character"
         aria-label="Pet plant character"
-        className="flex min-h-[60vh] flex-1 border-2 border-transparent bg-white/15"
+        className="relative flex min-h-[60vh] flex-1 border-2 border-transparent bg-white/15"
       >
         {/* Happy plant wearing the shop outfit, or the sad rainy plant while points are below 0. */}
         <HomeMascot />
+        <LevelBadge className="absolute top-2 right-2 z-10" />
       </section>
 
       <AccessoryShop />

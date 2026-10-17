@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent } from "rea
 import { getPointsTotal } from "@/components/scan/points-store";
 import { BASE_PIVOT, origin, spoutPosition, type Outfit } from "./looks";
 import { useShop } from "./outfit-store";
-import { SpriteLayers } from "./SpriteLayers";
+import { CharacterSprite, useLevel } from "./CharacterSprite";
+import { useLevelArt } from "./level-art";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import "./mascot.css";
 
@@ -52,6 +53,13 @@ const prefersReducedMotion = () =>
 export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
   const { equipped } = useShop();
   const outfit = outfitProp ?? equipped;
+  const level = useLevel();
+  // Level 2+ art is one picture with no watering can, so it can't do the watering animation.
+  const singleImage = useLevelArt(level) !== null;
+  const singleImageRef = useRef(singleImage);
+  useEffect(() => {
+    singleImageRef.current = singleImage;
+  }, [singleImage]);
   const outfitKey = `${outfit.can}/${outfit.pot}/${outfit.head}`;
 
   const [action, setAction] = useState<Action>("idle");
@@ -144,7 +152,8 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
   }, [later]);
 
   const runRandom = useCallback(() => {
-    const next = RANDOM_ACTIONS[Math.floor(Math.random() * RANDOM_ACTIONS.length)];
+    let next = RANDOM_ACTIONS[Math.floor(Math.random() * RANDOM_ACTIONS.length)];
+    if (next === "water" && singleImageRef.current) next = "hop";
     if (next === "walk") walk();
     else if (next === "look") lookAround();
     else if (next !== "idle") play(next, ACTION_MS[next as keyof typeof ACTION_MS]);
@@ -297,7 +306,7 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
         >
           <div className="mascot-flip" data-facing={facing}>
             <div className="mascot-sprite" style={{ transformOrigin: origin(BASE_PIVOT) }}>
-              <SpriteLayers outfit={outfit} />
+              <CharacterSprite level={level} outfit={outfit} />
               {action === "water" &&
                 [0, 1, 2, 3].map((i) => (
                   <span

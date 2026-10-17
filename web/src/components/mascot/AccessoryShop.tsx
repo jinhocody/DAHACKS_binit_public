@@ -6,6 +6,8 @@ import { ACCESSORIES, ACCESSORY_PRICE, SLOTS, type Accessory, type Slot } from "
 import { DEFAULT_OUTFIT } from "./looks";
 import { buyAccessory, equipAccessory, unequipSlot, useShop, type ShopSnapshot } from "./outfit-store";
 import { SpriteLayers } from "./SpriteLayers";
+import { useLevel } from "./CharacterSprite";
+import { useLevelArt } from "./level-art";
 import "./mascot.css";
 
 /** Zoom each thumbnail onto the part being sold (art-pixel center of that region). */
@@ -17,6 +19,8 @@ const THUMB_FOCUS: Record<Slot, string> = {
 
 export function AccessoryShop() {
   const shop = useShop();
+  const level = useLevel();
+  const levelArt = useLevelArt(level) !== null;
   const [message, setMessage] = useState("");
 
   function onAction(item: Accessory, state: ItemState) {
@@ -56,6 +60,12 @@ export function AccessoryShop() {
           </p>
         )}
       </div>
+
+      {levelArt && (
+        <p className="mt-3 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          Skins show on your Lvl. 1 plant. Your Lvl. {level} plant doesn&apos;t wear them yet.
+        </p>
+      )}
 
       <p role="status" className="mt-3 min-h-5 text-sm font-medium text-emerald-800">
         {message}

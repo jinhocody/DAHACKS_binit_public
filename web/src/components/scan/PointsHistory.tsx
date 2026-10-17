@@ -37,7 +37,7 @@ function when(at: number): string {
   return date.toLocaleDateString();
 }
 
-const ROW: Record<PointsEvent["kind"], { icon: PixelIconName; title: (e: PointsEvent) => string; detail: string }> = {
+const ROW: Record<Exclude<PointsEvent["kind"], "level">, { icon: PixelIconName; title: (e: PointsEvent) => string; detail: string }> = {
   award: { icon: "check", title: (e) => e.item ?? "Sorted item", detail: "Verified in the right bin" },
   "wrong-bin": { icon: "rain", title: (e) => e.item ?? "Sorted item", detail: "Went in the wrong bin" },
   streak: { icon: "flame", title: () => `${STREAK_DAYS}-day streak bonus`, detail: "Sorted something every day" },
@@ -63,6 +63,7 @@ export function PointsHistory() {
     <Card>
       <ul className="divide-y divide-gray-200">
         {history.map((e) => {
+          if (e.kind === "level") return null; // popup-only; never stored in history
           const row = ROW[e.kind];
           const gain = e.points > 0;
           return (

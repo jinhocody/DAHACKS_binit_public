@@ -13,9 +13,13 @@ interface PointsPopupProps {
   mood: "happy" | "sad";
   title: string;
   message: ReactNode;
-  /** Signed points change: +5, −2… */
-  delta: number;
-  total: number;
+  /** Signed points change: +5, −2… Ignored when `value` is given. */
+  delta?: number;
+  total?: number;
+  /** Shown instead of the animated ±N (e.g. the new level). */
+  value?: ReactNode;
+  /** Shown instead of the happy/sad plant (e.g. the old → new character). */
+  hero?: ReactNode;
   /** Shown instead of the number when delta is 0. */
   zeroText?: string;
   note?: string;
@@ -25,7 +29,19 @@ interface PointsPopupProps {
 }
 
 /** Modal popup for any points change: happy or sad plant, the animated +N / −N, then closes on its own. */
-export function PointsPopup({ mood, title, message, delta, total, zeroText, note, buttonLabel = "Go home", onClose }: PointsPopupProps) {
+export function PointsPopup({
+  mood,
+  title,
+  message,
+  delta = 0,
+  total = 0,
+  value,
+  hero,
+  zeroText,
+  note,
+  buttonLabel = "Go home",
+  onClose,
+}: PointsPopupProps) {
   const id = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
@@ -69,14 +85,14 @@ export function PointsPopup({ mood, title, message, delta, total, zeroText, note
           happy ? "from-emerald-100 to-white" : "from-slate-100 to-white"
         }`}
       >
-        {happy ? <HappyMascot size="min(200px, 55vw)" /> : <SadMascot size="min(200px, 55vw)" />}
-        <h2 id={`${id}-title`} className="text-2xl font-bold text-slate-900">
+        {hero ?? (happy ? <HappyMascot size="min(200px, 55vw)" /> : <SadMascot size="min(200px, 55vw)" />)}
+        <h2 id={`${id}-title`} className="mt-2 text-2xl font-bold text-slate-900">
           {title}
         </h2>
         <p id={`${id}-desc`} className="mt-1 text-sm text-slate-600">
           {message}
         </p>
-        <PointsDelta value={delta} total={total} zeroText={zeroText} />
+        {value ?? <PointsDelta value={delta} total={total} zeroText={zeroText} />}
         {note && <p className="mt-1 text-xs text-slate-600">{note}</p>}
         <div className="popup-timer" aria-hidden="true">
           <span style={{ ["--duration" as string]: `${POPUP_AUTO_CLOSE_MS}ms` }} />

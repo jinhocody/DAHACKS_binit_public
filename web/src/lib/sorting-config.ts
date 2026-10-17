@@ -80,3 +80,34 @@ export function isBinCategory(category: WasteCategory): category is BinCategory 
 export function pointsFor(category: WasteCategory, source: "gemini" | "mock"): number {
   return source === "mock" ? 0 : POINTS[category];
 }
+
+/** Points earned (awards and bonuses minus deductions; skin spending doesn't count) needed for each level. */
+export const LEVEL_THRESHOLDS = [0, 10, 20] as const;
+export const MAX_LEVEL = LEVEL_THRESHOLDS.length;
+
+export function levelFor(total: number): number {
+  let level = 1;
+  LEVEL_THRESHOLDS.forEach((min, i) => {
+    if (i > 0 && total >= min) level = i + 1;
+  });
+  return level;
+}
+
+export interface LevelProgress {
+  level: number;
+  /** Points into this level (0 when below 0). */
+  into: number;
+  /** Points this level spans; null at the max level. */
+  needed: number | null;
+  /** 0–1 fill for a progress bar (1 at the max level). */
+  fraction: number;
+}
+
+export function levelProgress(total: number): LevelProgress {
+  const level = levelFor(total);
+  if (level >= MAX_LEVEL) return { level, into: total - LEVEL_THRESHOLDS[level - 1], needed: null, fraction: 1 };
+  const start = LEVEL_THRESHOLDS[level - 1];
+  const needed = LEVEL_THRESHOLDS[level] - start;
+  const into = Math.max(0, total - start);
+  return { level, into, needed, fraction: Math.min(1, into / needed) };
+}

@@ -1,8 +1,8 @@
 "use client";
 
 import { BASE_PIVOT, origin } from "./looks";
+import { CharacterSprite, useLevel } from "./CharacterSprite";
 import { useShop } from "./outfit-store";
-import { SpriteLayers } from "./SpriteLayers";
 import "./mascot.css";
 
 const HEARTS = [
@@ -20,9 +20,10 @@ const SPARKLES = [
   { dx: "420%", dy: "220%", delay: "1.35s" },
 ];
 
-/** The plant in its equipped outfit, dancing with hearts and sparkles. Not interactive; `size` is any CSS length. */
-export function HappyMascot({ size = "min(420px, 88vw)" }: { size?: string }) {
+/** The plant for `level` (default: the current one) in its equipped outfit, dancing with hearts and sparkles. Not interactive; `size` is any CSS length. */
+export function HappyMascot({ size = "min(420px, 88vw)", level }: { size?: string; level?: number }) {
   const { equipped } = useShop();
+  const currentLevel = useLevel();
   return (
     <div className="mascot-happy" style={{ ["--size" as string]: size }} role="img" aria-label="A happy plant dancing">
       <div className="mascot-shadow" />
@@ -35,7 +36,7 @@ export function HappyMascot({ size = "min(420px, 88vw)" }: { size?: string }) {
       ))}
       <div className="mascot-happy-dancer" style={{ transformOrigin: origin(BASE_PIVOT) }}>
         <div className="mascot-sprite" style={{ transformOrigin: origin(BASE_PIVOT) }}>
-          <SpriteLayers outfit={equipped} />
+          <CharacterSprite level={level ?? currentLevel} outfit={equipped} />
         </div>
       </div>
       {HEARTS.map((h, i) => (

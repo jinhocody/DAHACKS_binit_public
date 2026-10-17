@@ -13,6 +13,7 @@ import {
   DAILY_POINT_CAP,
   INACTIVITY_DAYS,
   INACTIVITY_PENALTY,
+  levelFor,
   REMEMBERED_PHOTOS,
   STREAK_BONUS,
   STREAK_DAYS,
@@ -24,7 +25,8 @@ const HISTORY_LIMIT = 100;
 /** Fired on window whenever the ledger changes, so live views (mascot, rewards, popups) can refresh. */
 export const POINTS_EVENT = "snap:points";
 
-export type PointsEventKind = "award" | "wrong-bin" | "streak" | "inactive";
+/** "level" events are popup-only (never in history): the level changed because the total crossed a threshold. */
+export type PointsEventKind = "award" | "wrong-bin" | "streak" | "inactive" | "level";
 
 /** One line of the points history. `points` is signed: +5 for an award, −2 for being away. */
 export interface PointsEvent {
@@ -38,6 +40,9 @@ export interface PointsEvent {
   category?: WasteCategory;
   /** Days away, for "inactive" events. */
   days?: number;
+  /** For "level" events: the new level and the one before it. */
+  level?: number;
+  from?: number;
 }
 
 interface PointsState {
@@ -131,18 +136,29 @@ function load(now = new Date()): PointsState {
   }
 }
 
-function save(state: PointsState) {
+let eventSeq = 0;
+function makeEvent(kind: PointsEventKind, points: number, total: number, at: number, extra?: Partial<PointsEvent>): PointsEvent {
+  return { id: `${at.toString(36)}-${(eventSeq++).toString(36)}`, at, kind, points, total, ...extra };
+}
+
+/** Saves the ledger. When the total crosses a level threshold (either way), queues a level popup. */
+function save(state: PointsState, previousTotal?: number) {
+  if (previousTotal !== undefined) {
+    const from = levelFor(previousTotal);
+    const level = levelFor(state.total);
+    if (level !== from) {
+      state = {
+        ...state,
+        pendingPopups: [...state.pendingPopups, makeEvent("level", 0, state.total, Date.now(), { level, from })],
+      };
+    }
+  }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
     // Private mode etc. Points just won't persist.
   }
   window.dispatchEvent(new Event(POINTS_EVENT));
-}
-
-let eventSeq = 0;
-function makeEvent(kind: PointsEventKind, points: number, total: number, at: number, extra?: Partial<PointsEvent>): PointsEvent {
-  return { id: `${at.toString(36)}-${(eventSeq++).toString(36)}`, at, kind, points, total, ...extra };
 }
 
 function withHistory(state: PointsState, ...added: PointsEvent[]): PointsEvent[] {
@@ -211,7 +227,7 @@ export function awardVerified(points: number, ticketId: string, photoHashes: str
     idleBlocksCharged: 0,
     pendingPopups,
   };
-  save(next);
+  save(next, state.total);
   return { status: "awarded", points: allowed, total: next.total, capped: allowed < points };
 }
 
@@ -228,7 +244,7 @@ export function deductWrongBin(points: number, ticketId: string, info: DisposalI
     penalizedTicketIds: [ticketId, ...state.penalizedTicketIds].slice(0, REMEMBERED_PHOTOS),
     history: withHistory(state, event),
   };
-  save(next);
+  save(next, state.total);
   return { points: removed, total: next.total };
 }
 
@@ -255,7 +271,7 @@ export function checkInactivity(now = new Date()): void {
     idleBlocksCharged: blocks,
     history: withHistory(state, event),
     pendingPopups: [...state.pendingPopups, event],
-  });
+  }, state.total);
 }
 
 /** Removes and returns the streak/inactivity events that still need a popup. */

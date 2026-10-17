@@ -921,3 +921,128 @@
     display: none;
   }
 }
+
+/* ================= Level badge XP bar ================= */
+
+.level-bar {
+  position: relative;
+  width: 6.5rem;
+  height: 1.25rem;
+  background: #fffaf0;
+  box-shadow:
+    inset 0 0 0 2px var(--pixel-ink),
+    2px 2px 0 0 var(--pixel-ink-soft);
+  overflow: hidden;
+}
+
+.level-bar-fill {
+  position: absolute;
+  inset: 2px auto 2px 2px;
+  max-width: calc(100% - 4px);
+  background: #3f6249;
+  transition: width 0.6s steps(6);
+}
+
+.level-bar-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-pixel-small);
+  font-size: 1rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--pixel-ink);
+}
+
+.level-bar-label-on {
+  color: #fffaf0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level-bar-fill {
+    transition: none;
+  }
+}
+
+/* ================= Level change (popup hero) ================= */
+
+.level-thumb,
+.level-mystery {
+  position: relative;
+  width: var(--size);
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+
+.level-thumb .mascot-part {
+  animation: none;
+}
+
+.level-thumb-old {
+  opacity: 0.55;
+  filter: saturate(0.6);
+}
+
+.level-thumb-down {
+  filter: saturate(0.5) brightness(0.9);
+}
+
+/* The old plant blacked out: the shape of what's coming, without giving it away. */
+.level-mystery-shape {
+  position: absolute;
+  inset: 0;
+  filter: brightness(0);
+  opacity: 0.8;
+  animation: mascot-breathe 2.6s ease-in-out infinite;
+  transform-origin: 50% 85%;
+}
+
+.level-mystery-shape .mascot-part {
+  animation: none;
+}
+
+.level-mystery-mark {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-pixel);
+  font-size: calc(var(--size) * 0.36);
+  line-height: 1;
+  color: #facc15;
+  text-shadow: 3px 3px 0 var(--pixel-ink);
+  animation: level-mark-blink 1.2s steps(2) infinite;
+}
+
+@keyframes level-mark-blink {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* The new character arrives with a bounce after the arrow. */
+.level-next {
+  animation: points-pop 0.6s cubic-bezier(0.3, 1.8, 0.5, 1) both;
+  animation-delay: 0.45s;
+}
+
+.level-arrow {
+  animation: level-arrow 0.9s steps(3) infinite;
+}
+
+@keyframes level-arrow {
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level-next,
+  .level-arrow,
+  .level-mystery-shape,
+  .level-mystery-mark {
+    animation: none;
+  }
+}

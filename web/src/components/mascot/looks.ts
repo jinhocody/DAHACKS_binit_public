@@ -183,3 +183,14 @@ export function outfitLayers(outfit: Outfit) {
 export function spoutPosition() {
   return { left: pct(SPOUT[0]), top: pct(SPOUT[1]) };
 }
+
+/**
+ * Character art for levels 2 and 3 (level 1 is the layered plant above, with skins).
+ * To add one, drop the PNG at this path in web/public: a square image with a transparent background,
+ * 64×64 pixel art scaled up like base.png, the plant standing on the same baseline (pot bottom at row ~54).
+ * Until a file exists the level keeps the level-1 plant, so nothing shows as a broken image.
+ */
+export const LEVEL_ART: Record<number, string> = {
+  2: "/mascot/level2.png",
+  3: "/mascot/level3.png",
+};

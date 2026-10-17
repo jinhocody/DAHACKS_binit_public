@@ -1,4 +1,4 @@
-import { GeminiScanError, hasGeminiKey, verifyDisposalWithGemini } from "@/lib/gemini";
+import { GeminiScanError, hasAiKey, verifyDisposalWithGemini } from "@/lib/gemini";
 import { readImageField } from "@/lib/image-upload";
 import { verifyTicket } from "@/lib/scan-ticket";
 import type { VerifyResult } from "@/lib/scan-types";
@@ -14,7 +14,7 @@ function fail(reason: string, status = 400, extra: Partial<VerifyResult> = {}) {
 
 /**
  * POST /api/verify — multipart/form-data with `ticket` (from /api/scan), `binPhoto` and `insidePhoto`.
- * Gemini checks that the item went into the right bin; points are only returned when it did,
+ * The AI (OpenAI, or Gemini as backup) checks that the item went into the right bin; points are only returned when it did,
  * and a clearly wrong bin returns a `penalty` the client deducts.
  * Photos are processed in memory only and never stored.
  */
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   const insidePhoto = readImageField(form, "insidePhoto", "photo of the item in the bin");
   if (typeof insidePhoto === "string") return fail(insidePhoto);
 
-  if (!hasGeminiKey()) return fail("Verification needs the AI service, which isn't configured.", 503);
+  if (!hasAiKey()) return fail("Verification needs the AI service, which isn't configured.", 503);
 
   try {
     const check = await verifyDisposalWithGemini(
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     return reply({ verified: true, points: data.points, reason: check.reason || "Nice sorting!", ...base });
   } catch (err) {
     const status = err instanceof GeminiScanError ? err.status : undefined;
-    console.error("[api/verify] Gemini verify failed:", status ?? "", err);
+    console.error("[api/verify] AI verify failed:", status ?? "", err);
     return fail("The AI is busy right now. Please try again in a moment.", 503, { retryable: true, ticketId: data.id });
   }
 }

@@ -1,6 +1,9 @@
-// Server-only module: reads GEMINI_API_KEY and calls Gemini. Never import from client code.
+// Server-only module: the AI behind scanning and verification. Never import from client code.
+// OpenAI is tried first when OPENAI_API_KEY is set (AI_PROVIDER=gemini skips it); Gemini is the backup.
 // (The `server-only` package is not installed, so we guard at runtime instead.)
 import { GoogleGenAI, ThinkingLevel, Type, type Schema } from "@google/genai";
+import { AiScanError } from "./ai-error";
+import { generateJsonOpenAI, hasOpenAIKey, toOpenAISchema } from "./openai-provider";
 import { BIN_CATEGORIES, WASTE_CATEGORIES, type BinCategory, type ScanResult, type WasteCategory } from "./scan-types";
 import { BINS, LOCATION, MIN_CONFIDENCE, isBinCategory, pointsFor } from "./sorting-config";
 
@@ -21,6 +24,15 @@ export function getGeminiModels(): string[] {
 
 export function hasGeminiKey(): boolean {
   return Boolean(process.env.GEMINI_API_KEY?.trim());
+}
+
+/** True when at least one AI provider is configured. */
+export function hasAiKey(): boolean {
+  return hasOpenAIKey() || hasGeminiKey();
+}
+
+function openAIEnabled(): boolean {
+  return hasOpenAIKey() && process.env.AI_PROVIDER?.trim().toLowerCase() !== "gemini";
 }
 
 const RESPONSE_SCHEMA: Schema = {
@@ -67,29 +79,43 @@ Cupertino rules:
 - If you are not confident, answer "uncertain" instead of guessing a cart.
 If no disposable item is clearly visible (e.g. a person, a pet, a landscape, or a blurry image), set confidence below 0.3, use item "Unknown item", category "uncertain", and explain in note.`;
 
-export class GeminiScanError extends Error {
-  constructor(message: string, public readonly status?: number, options?: { cause?: unknown }) {
-    super(message, options);
-    this.name = "GeminiScanError";
-  }
-}
+// Kept under the old name too, since the API routes catch GeminiScanError.
+export { AiScanError, AiScanError as GeminiScanError };
 
 let client: GoogleGenAI | null = null;
 function getClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) throw new GeminiScanError("GEMINI_API_KEY is not configured");
+  if (!apiKey) throw new AiScanError("GEMINI_API_KEY is not configured");
   if (!client) client = new GoogleGenAI({ apiKey });
   return client;
 }
 
 type Part = { inlineData: { mimeType: string; data: string } } | { text: string };
 
+/** Asks the AI for JSON matching `schema`: OpenAI first, then the Gemini chain if OpenAI fails or isn't set up. */
+async function generateJson(parts: Part[], schema: Schema, schemaName: string): Promise<unknown> {
+  if (openAIEnabled()) {
+    try {
+      const images = parts.flatMap((p) =>
+        "inlineData" in p ? [{ mimeType: p.inlineData.mimeType, base64: p.inlineData.data }] : [],
+      );
+      const prompt = parts.flatMap((p) => ("text" in p ? [p.text] : [])).join("\n\n");
+      return await generateJsonOpenAI(images, prompt, toOpenAISchema(schema), schemaName);
+    } catch (err) {
+      if (!hasGeminiKey()) throw err;
+      const status = err instanceof AiScanError ? err.status : undefined;
+      console.warn(`[ai] openai failed (${status ?? "no status"}): ${(err as Error).message} → trying gemini`);
+    }
+  }
+  return generateJsonGemini(parts, schema);
+}
+
 /** Calls Gemini with JSON-schema output, falling back through the model chain. Returns parsed JSON. */
-async function generateJson(parts: Part[], schema: Schema): Promise<unknown> {
+async function generateJsonGemini(parts: Part[], schema: Schema): Promise<unknown> {
   const ai = getClient();
 
   let text: string | undefined;
-  let lastError: GeminiScanError | undefined;
+  let lastError: AiScanError | undefined;
   for (const model of getGeminiModels()) {
     try {
       const response = await ai.models.generateContent({
@@ -115,7 +141,7 @@ async function generateJson(parts: Part[], schema: Schema): Promise<unknown> {
           : isTimeout
             ? 408
             : undefined;
-      lastError = new GeminiScanError(err instanceof Error ? err.message : "Gemini request failed", status, {
+      lastError = new AiScanError(err instanceof Error ? err.message : "Gemini request failed", status, {
         cause: err,
       });
       if (status === undefined || !RETRYABLE_STATUSES.has(status)) break;
@@ -124,12 +150,12 @@ async function generateJson(parts: Part[], schema: Schema): Promise<unknown> {
   }
   if (lastError) throw lastError;
 
-  if (!text) throw new GeminiScanError("Gemini returned an empty response");
+  if (!text) throw new AiScanError("Gemini returned an empty response");
 
   try {
     return JSON.parse(text);
   } catch (err) {
-    throw new GeminiScanError("Gemini returned invalid JSON", undefined, { cause: err });
+    throw new AiScanError("Gemini returned invalid JSON", undefined, { cause: err });
   }
 }
 
@@ -139,7 +165,7 @@ function imagePart(bytes: ArrayBuffer, mimeType: string): Part {
 
 /** Sends the image (in memory, base64 inline) to Gemini and returns a normalized ScanResult. */
 export async function scanWithGemini(imageBytes: ArrayBuffer, mimeType: string): Promise<ScanResult> {
-  const parsed = await generateJson([imagePart(imageBytes, mimeType), { text: PROMPT }], RESPONSE_SCHEMA);
+  const parsed = await generateJson([imagePart(imageBytes, mimeType), { text: PROMPT }], RESPONSE_SCHEMA, "scan_result");
   return normalizeScanResult(parsed);
 }
 
@@ -186,6 +212,7 @@ If either photo looks like a screen, a printed picture, or an image taken from t
   const raw = await generateJson(
     [imagePart(binPhoto.bytes, binPhoto.mimeType), imagePart(insidePhoto.bytes, insidePhoto.mimeType), { text: prompt }],
     VERIFY_SCHEMA,
+    "disposal_check",
   );
 
   const obj = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
@@ -246,7 +273,7 @@ export function normalizeScanResult(raw: unknown): ScanResult {
     confidence: Math.round(confidence * 100) / 100,
     points: pointsFor(category, "gemini"),
     ...(aiGuess ? { aiGuess } : {}),
-    source: "gemini",
+    source: "gemini", // means "a real AI result" (OpenAI or Gemini); the scan route only issues point tickets for it
     ...(note ? { note } : {}),
   };
 }

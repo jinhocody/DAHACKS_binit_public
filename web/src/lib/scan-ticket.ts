@@ -19,9 +19,10 @@ export interface TicketData {
 function getSecret(): string {
   const secret = process.env.SCAN_TICKET_SECRET?.trim();
   if (secret) return secret;
-  // Fallback so deploys keep working without the extra env var: a one-way hash of the Gemini key.
-  const geminiKey = process.env.GEMINI_API_KEY?.trim();
-  if (geminiKey) return createHash("sha256").update(`sortsnap-ticket:${geminiKey}`).digest("hex");
+  // Fallback so deploys keep working without the extra env var: a one-way hash of an AI key the server has.
+  // The Gemini key comes first so tickets signed before OpenAI was added stay valid.
+  const aiKey = process.env.GEMINI_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
+  if (aiKey) return createHash("sha256").update(`sortsnap-ticket:${aiKey}`).digest("hex");
   return "sortsnap-dev-only-secret";
 }
 

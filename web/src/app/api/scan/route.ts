@@ -1,4 +1,4 @@
-import { GeminiScanError, hasGeminiKey, scanWithGemini } from "@/lib/gemini";
+import { GeminiScanError, hasAiKey, scanWithGemini } from "@/lib/gemini";
 import { readImageField } from "@/lib/image-upload";
 import { getMockScanResult } from "@/lib/mock-scan";
 import { signTicket } from "@/lib/scan-ticket";
@@ -33,8 +33,8 @@ export async function POST(request: Request) {
   const image = readImageField(form, "image");
   if (typeof image === "string") return errorResponse(image, 400);
 
-  if (!hasGeminiKey()) {
-    console.warn("[api/scan] GEMINI_API_KEY not set — returning mock result");
+  if (!hasAiKey()) {
+    console.warn("[api/scan] no AI key (OPENAI_API_KEY / GEMINI_API_KEY) set — returning mock result");
     return Response.json(getMockScanResult("No API key configured") satisfies ScanResult);
   }
 
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     return Response.json(withTicket(result) satisfies ScanResult);
   } catch (err) {
     const status = err instanceof GeminiScanError ? err.status : undefined;
-    console.error("[api/scan] Gemini scan failed:", status ?? "", err);
+    console.error("[api/scan] AI scan failed:", status ?? "", err);
     const reason =
       status === 429
         ? "AI service busy (rate limit reached)"

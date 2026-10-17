@@ -55,6 +55,7 @@ export function PointsEvents() {
         value={<p className={`points-delta-value mt-2 ${up ? "points-delta-gain" : "points-delta-loss"}`}>Lvl. {level}</p>}
         message={message}
         buttonLabel={up ? "Yay!" : "Got it"}
+        confetti={up}
         onClose={close}
       />
     );

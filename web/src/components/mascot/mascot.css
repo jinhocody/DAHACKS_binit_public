@@ -84,6 +84,11 @@
   animation: mascot-armBob 2.2s ease-in-out infinite alternate;
 }
 
+/* Level 2+ characters: the arm without the watering can, bobbing out of step with the other one. */
+.mascot-arm-free {
+  animation: mascot-armBob 2.2s ease-in-out -1.1s infinite alternate;
+}
+
 /* Shop thumbnails: same layers, no motion. */
 .mascot-static .mascot-part {
   animation: none;
@@ -136,6 +141,13 @@
 .mascot-walker[data-action="wave"] .mascot-arm {
   animation: mascot-wave 1.4s ease-in-out;
 }
+/* Characters with a free arm wave that one and keep holding the can. */
+.mascot-walker[data-action="wave"] .mascot-arm-free {
+  animation: mascot-wave 1.4s ease-in-out;
+}
+.mascot-walker[data-action="wave"] .mascot-arm-free ~ .mascot-arm {
+  animation: mascot-armBob 2.2s ease-in-out infinite alternate;
+}
 .mascot-walker[data-action="wave"] .mascot-top {
   animation: mascot-leafPerk 1.4s ease-in-out;
 }
@@ -150,7 +162,8 @@
 .mascot-walker[data-action="dance"] .mascot-shadow {
   animation: mascot-shadowDance 2.6s ease-in-out;
 }
-.mascot-walker[data-action="dance"] .mascot-arm {
+.mascot-walker[data-action="dance"] .mascot-arm,
+.mascot-walker[data-action="dance"] .mascot-arm-free {
   animation: mascot-wave 1.3s ease-in-out 2;
 }
 .mascot-walker[data-action="dance"] .mascot-top {
@@ -340,25 +353,20 @@
   }
 }
 
+/* --wave-dir: 1 lifts an arm on the left, -1 one on the right. */
 @keyframes mascot-wave {
   0%,
   100% {
     transform: rotate(0deg);
   }
-  20% {
-    transform: rotate(24deg);
-  }
-  35% {
-    transform: rotate(10deg);
-  }
-  50% {
-    transform: rotate(24deg);
-  }
-  65% {
-    transform: rotate(10deg);
-  }
+  20%,
+  50%,
   80% {
-    transform: rotate(24deg);
+    transform: rotate(calc(var(--wave-dir, 1) * 24deg));
+  }
+  35%,
+  65% {
+    transform: rotate(calc(var(--wave-dir, 1) * 10deg));
   }
 }
 
@@ -375,6 +383,7 @@
   }
 }
 
+/* --tip: how far the can tips (negative for a can on the left, positive for one on the right). */
 @keyframes mascot-water {
   0%,
   100% {
@@ -382,13 +391,13 @@
   }
   20%,
   80% {
-    transform: rotate(-60deg);
+    transform: rotate(var(--tip, -60deg));
   }
   40% {
-    transform: rotate(-55deg);
+    transform: rotate(calc(var(--tip, -60deg) * 0.92));
   }
   60% {
-    transform: rotate(-63deg);
+    transform: rotate(calc(var(--tip, -60deg) * 1.05));
   }
 }
 
@@ -490,11 +499,13 @@
 @media (prefers-reduced-motion: reduce) {
   .mascot-sprite,
   .mascot-arm,
+  .mascot-arm-free,
   .mascot-actor,
   .mascot-shadow,
   .mascot-flip,
   .mascot-walker[data-action] .mascot-actor,
   .mascot-walker[data-action] .mascot-arm,
+  .mascot-walker[data-action] .mascot-arm-free,
   .mascot-walker[data-action] .mascot-flip,
   .mascot-walker[data-action] .mascot-shadow {
     animation: none !important;
@@ -764,7 +775,8 @@
   animation: mascot-dance 2.6s ease-in-out infinite;
 }
 
-.mascot-happy .mascot-arm {
+.mascot-happy .mascot-arm,
+.mascot-happy .mascot-arm-free {
   animation: mascot-wave 1.3s ease-in-out infinite;
 }
 
@@ -1044,5 +1056,45 @@
   .level-mystery-shape,
   .level-mystery-mark {
     animation: none;
+  }
+}
+
+/* ================= Level-up confetti ================= */
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  opacity: 0;
+  box-shadow: inset -2px -2px 0 rgb(0 0 0 / 0.18);
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.35, 0, 0.75, 1);
+  animation-fill-mode: forwards;
+}
+
+/* Falls past the bottom while drifting sideways and turning in quarter steps, like a pixel sprite. */
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate(0, -24px) rotate(0deg);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), 105vh) rotate(var(--spin));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti {
+    display: none;
   }
 }

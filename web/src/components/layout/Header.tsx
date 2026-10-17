@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PixelIcon } from "@/components/pixel/PixelIcon";
+import Image from "next/image";
 import { Suspense } from "react";
 import { HeaderClouds } from "./HeaderClouds";
 import {
@@ -20,14 +20,17 @@ export function Header() {
       <header className="header-sky sticky top-0 z-40 isolate">
         <HeaderClouds />
         <div className="mx-auto flex h-20 w-full max-w-4xl items-center justify-center px-4 pb-5 sm:h-24 sm:justify-between sm:px-6">
-          <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight text-emerald-900">
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 items-center justify-center border-2 border-emerald-900 bg-emerald-200 text-emerald-900"
-            >
-              <PixelIcon name="sprout" size={22} />
-            </span>
-            Snap
+          <Link href="/" aria-label="Binit home" className="flex items-center">
+            {/* Pixel art: served as-is (no re-encoding) so the edges stay crisp. */}
+            <Image
+              src="/brand/binit-logo.png"
+              alt="Binit"
+              width={469}
+              height={168}
+              preload
+              unoptimized
+              className="h-12 w-auto sm:h-14"
+            />
           </Link>
           <nav aria-label="Main" className="hidden sm:block">
             <Suspense fallback={<DesktopNavLinks pathname={null} />}>

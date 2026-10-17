@@ -6,7 +6,7 @@ import type { WasteCategory } from "@/lib/scan-types";
 
 export const metadata: Metadata = {
   title: "History",
-  description: "Your past SortSnap scans — coming soon.",
+  description: "Your past Snap scans — coming soon.",
 };
 
 const PREVIEW: { item: string; category: WasteCategory; when: string }[] = [

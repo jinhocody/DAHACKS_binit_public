@@ -24,12 +24,12 @@ const pixelify = Pixelify_Sans({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s · SortSnap",
-    default: "SortSnap — Snap your trash. Know the bin.",
+    template: "%s · Snap",
+    default: "Snap — Snap your trash. Know the bin.",
   },
   description:
-    "SortSnap uses AI to tell you which bin your trash belongs in. Snap a photo and get Cupertino recycling, compost or trash guidance in seconds.",
-  applicationName: "SortSnap",
+    "Snap uses AI to tell you which bin your trash belongs in. Snap a photo and get Cupertino recycling, compost or trash guidance in seconds.",
+  applicationName: "Snap",
 };
 
 export const viewport: Viewport = {

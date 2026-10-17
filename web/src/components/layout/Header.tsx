@@ -25,7 +25,7 @@ export function Header() {
             >
               <PixelIcon name="sprout" size={22} />
             </span>
-            SortSnap
+            Snap
           </Link>
           <nav aria-label="Main" className="hidden sm:block">
             <Suspense fallback={<DesktopNavLinks pathname={null} />}>

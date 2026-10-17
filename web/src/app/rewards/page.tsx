@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/Card";
 
 export const metadata: Metadata = {
   title: "Rewards",
-  description: "Earn points for sorting right and redeem rewards — coming soon to SortSnap.",
+  description: "Earn points for sorting right and redeem rewards — coming soon to Snap.",
 };
 
 const PERKS = [

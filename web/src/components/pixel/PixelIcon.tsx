@@ -1,5 +1,6 @@
 // 16×16 pixel-art icons drawn as crisp SVG rectangles.
 // Grid legend: "X" = outline (currentColor), "w" = light fill, "x" = currentColor at half strength, "." = empty.
+// Pass `outline` / `light` / `shade` to color the three tones for a full-color icon.
 
 const ICONS = {
   home: [
@@ -130,19 +131,19 @@ const ICONS = {
   ],
   gift: [
     "....XX....XX....",
-    "....XwX..XwX....",
-    ".....XwXXwX.....",
+    "....XxX..XxX....",
+    ".....XxXXxX.....",
     "......XXXX......",
     "XXXXXXXXXXXXXXXX",
-    "XwwwwwwXXwwwwwwX",
-    "XwwwwwwXXwwwwwwX",
+    "XwwwwwwxxwwwwwwX",
+    "XwwwwwwxxwwwwwwX",
     "XXXXXXXXXXXXXXXX",
-    ".XwwwwwXXwwwwwX.",
-    ".XwwwwwXXwwwwwX.",
-    ".XwwwwwXXwwwwwX.",
-    ".XwwwwwXXwwwwwX.",
-    ".XwwwwwXXwwwwwX.",
-    ".XwwwwwXXwwwwwX.",
+    ".XwwwwwxxwwwwwX.",
+    ".XwwwwwxxwwwwwX.",
+    ".XwwwwwxxwwwwwX.",
+    ".XwwwwwxxwwwwwX.",
+    ".XwwwwwxxwwwwwX.",
+    ".XwwwwwxxwwwwwX.",
     ".XXXXXXXXXXXXXX.",
     "................",
   ],
@@ -254,9 +255,13 @@ interface PixelIconProps {
   title?: string;
   /** Fill for the light pixels; use "transparent" on dark buttons so the button color shows through. */
   light?: string;
+  /** Solid color for the "x" pixels (default: currentColor at half strength). */
+  shade?: string;
+  /** Color for the "X" outline pixels (default: currentColor). */
+  outline?: string;
 }
 
-export function PixelIcon({ name, size = 20, className = "", title, light = LIGHT }: PixelIconProps) {
+export function PixelIcon({ name, size = 20, className = "", title, light = LIGHT, shade, outline }: PixelIconProps) {
   const d = PATHS[name];
   return (
     <svg
@@ -270,8 +275,8 @@ export function PixelIcon({ name, size = 20, className = "", title, light = LIGH
       aria-label={title}
     >
       {d.w && light !== "transparent" && <path d={d.w} fill={light} />}
-      {d.x && <path d={d.x} fill="currentColor" opacity={0.5} />}
-      {d.X && <path d={d.X} fill="currentColor" />}
+      {d.x && <path d={d.x} fill={shade ?? "currentColor"} opacity={shade ? undefined : 0.5} />}
+      {d.X && <path d={d.X} fill={outline ?? "currentColor"} />}
     </svg>
   );
 }

@@ -5,7 +5,7 @@ import { PointsSummary } from "@/components/mascot/PointsSummary";
 
 export const metadata: Metadata = {
   title: "Rewards",
-  description: "Your SortSnap points: earn them by sorting right. Redeeming rewards is coming soon.",
+  description: "Your Snap points: earn them by sorting right. Redeeming rewards is coming soon.",
 };
 
 const PERKS = [

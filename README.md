@@ -1,11 +1,3 @@
-<p align="center">
-  <img src="web/public/brand/binit-logo.png" alt="Binit" width="300">
-</p>
-
-<p align="center"><b>Snap your trash. Know the bin.</b></p>
-
-<p align="center"><a href="https://binit-app.vercel.app">Try it live → binit-app.vercel.app</a></p>
-
 ## Why we built this
 
 Every one of us has stood in front of three bins holding a greasy pizza box, completely unsure. Then we looked up Cupertino's rules and found out the pizza box goes in compost, but those "compostable" plastic forks? Trash. We had been doing it wrong the whole time.

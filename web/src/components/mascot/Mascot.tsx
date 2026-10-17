@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { getPointsTotal } from "@/components/scan/points-store";
-import { BASE_PIVOT, origin, spoutPosition, type Outfit } from "./looks";
+import { BASE_PIVOT, LEVEL_RIGS, origin, spoutPosition, type Outfit } from "./looks";
 import { useShop } from "./outfit-store";
 import { CharacterSprite, useLevel } from "./CharacterSprite";
 import { useLevelArt } from "./level-art";
@@ -54,12 +54,8 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
   const { equipped } = useShop();
   const outfit = outfitProp ?? equipped;
   const level = useLevel();
-  // Level 2+ art is one picture with no watering can, so it can't do the watering animation.
-  const singleImage = useLevelArt(level) !== null;
-  const singleImageRef = useRef(singleImage);
-  useEffect(() => {
-    singleImageRef.current = singleImage;
-  }, [singleImage]);
+  // Level 2+ art holds its watering can somewhere else, so the drops come from its own spout.
+  const rig = useLevelArt(level) !== null ? LEVEL_RIGS[level] : null;
   const outfitKey = `${outfit.can}/${outfit.pot}/${outfit.head}`;
 
   const [action, setAction] = useState<Action>("idle");
@@ -152,8 +148,7 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
   }, [later]);
 
   const runRandom = useCallback(() => {
-    let next = RANDOM_ACTIONS[Math.floor(Math.random() * RANDOM_ACTIONS.length)];
-    if (next === "water" && singleImageRef.current) next = "hop";
+    const next = RANDOM_ACTIONS[Math.floor(Math.random() * RANDOM_ACTIONS.length)];
     if (next === "walk") walk();
     else if (next === "look") lookAround();
     else if (next !== "idle") play(next, ACTION_MS[next as keyof typeof ACTION_MS]);
@@ -313,7 +308,7 @@ export function Mascot({ outfit: outfitProp }: { outfit?: Outfit }) {
                     key={i}
                     className="mascot-drop"
                     style={{
-                      ...spoutPosition(),
+                      ...spoutPosition(rig?.canArm.spout),
                       ["--delay" as string]: `${300 + i * 180}ms`,
                       ["--dx" as string]: `${(i % 2) * 1.6 - 0.8}%`,
                     }}

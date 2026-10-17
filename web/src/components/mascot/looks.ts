@@ -180,17 +180,134 @@ export function outfitLayers(outfit: Outfit) {
   } satisfies Record<string, Layer>;
 }
 
-export function spoutPosition() {
-  return { left: pct(SPOUT[0]), top: pct(SPOUT[1]) };
+export function spoutPosition(spout: Point = SPOUT) {
+  return { left: pct(spout[0]), top: pct(spout[1]) };
+}
+
+/** One arm of a level character: everything inside `outline`, which starts and ends on the image's left or right edge. */
+interface ArmRig {
+  side: "left" | "right";
+  /** Listed top to bottom; the stretch along the image edge closes it. */
+  outline: readonly Point[];
+  /** Shoulder joint the arm rotates around. */
+  pivot: Point;
+}
+
+/**
+ * How a level's character art is cut into moving parts, like the level-1 plant:
+ * a swaying top, an arm holding the watering can, a free arm that waves, and the body that stays put.
+ */
+export interface LevelRig {
+  src: string;
+  /** Bottom edge of the top part, from left (x=0) to right (x=64). */
+  topEdge: readonly Point[];
+  topPivot: Point;
+  topSway: number;
+  canArm: ArmRig & {
+    /** How far the can tips to water (negative = counterclockwise, for a can on the left). */
+    tip: number;
+    /** Where the spout ends up when tipped. */
+    spout: Point;
+  };
+  freeArm: ArmRig;
 }
 
 /**
  * Character art for levels 2 and 3 (level 1 is the layered plant above, with skins).
- * To add one, drop the PNG at this path in web/public: a square image with a transparent background,
- * 64×64 pixel art scaled up like base.png, the plant standing on the same baseline (pot bottom at row ~54).
+ * To add one, drop the PNG at `src` in web/public: a square image with a transparent background,
+ * 64×64 pixel art scaled up like base.png. Then trace its parts here in art pixels.
  * Until a file exists the level keeps the level-1 plant, so nothing shows as a broken image.
  */
-export const LEVEL_ART: Record<number, string> = {
-  2: "/mascot/level2.png",
-  3: "/mascot/level3.png",
+export const LEVEL_RIGS: Record<number, LevelRig> = {
+  2: {
+    src: "/mascot/level2.png",
+    topEdge: [
+      [0, 24],
+      [36, 24],
+      [36, 26],
+      [64, 26],
+    ],
+    topPivot: [32, 24],
+    topSway: 4,
+    canArm: {
+      side: "left",
+      outline: [
+        [0, 33],
+        [22, 33],
+        [22, 36],
+        [20, 36],
+        [20, 50],
+        [0, 50],
+      ],
+      pivot: [22, 34],
+      tip: -40,
+      spout: [12, 50],
+    },
+    freeArm: {
+      side: "right",
+      outline: [
+        [64, 27],
+        [44, 27],
+        [44, 37],
+        [64, 37],
+      ],
+      pivot: [43, 36],
+    },
+  },
+  3: {
+    src: "/mascot/level3.png",
+    topEdge: [
+      [0, 26],
+      [12, 26],
+      [12, 32],
+      [21, 32],
+      [21, 30],
+      [43, 30],
+      [43, 32],
+      [64, 32],
+    ],
+    topPivot: [32, 30],
+    topSway: 4,
+    canArm: {
+      side: "right",
+      outline: [
+        [64, 38],
+        [45, 38],
+        [45, 53],
+        [64, 53],
+      ],
+      pivot: [45, 40],
+      tip: 40,
+      spout: [54, 54],
+    },
+    freeArm: {
+      side: "left",
+      outline: [
+        [0, 26],
+        [12, 26],
+        [12, 32],
+        [19, 32],
+        [19, 48],
+        [0, 48],
+      ],
+      pivot: [19, 40],
+    },
+  },
 };
+
+export const LEVEL_ART: Record<number, string> = Object.fromEntries(
+  Object.entries(LEVEL_RIGS).map(([level, rig]) => [level, rig.src]),
+);
+
+/** Clip polygons for a level character's four layers. At rest they tile the image exactly. */
+export function levelLayers(rig: LevelRig) {
+  const arms = [rig.canArm, rig.freeArm];
+  const right = arms.find((a) => a.side === "right")?.outline ?? [];
+  const left = arms.find((a) => a.side === "left")?.outline ?? [];
+  return {
+    body: polygon([...rig.topEdge, ...right, [ART_SIZE, ART_SIZE], [0, ART_SIZE], ...[...left].reverse()]),
+    top: polygon([[0, 0], [ART_SIZE, 0], ...[...rig.topEdge].reverse()]),
+    canArm: polygon(rig.canArm.outline),
+    freeArm: polygon(rig.freeArm.outline),
+  };
+}

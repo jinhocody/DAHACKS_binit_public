@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { Confetti } from "./Confetti";
 import { HappyMascot } from "./HappyMascot";
 import { PointsDelta } from "./PointsDelta";
 import { SadMascot } from "./SadMascot";
@@ -24,6 +25,8 @@ interface PointsPopupProps {
   zeroText?: string;
   note?: string;
   buttonLabel?: string;
+  /** A burst of confetti over the screen as it opens (e.g. a level up). */
+  confetti?: boolean;
   /** Called once: by the button, Escape, a backdrop click, or the auto-close timer. */
   onClose: () => void;
 }
@@ -40,6 +43,7 @@ export function PointsPopup({
   zeroText,
   note,
   buttonLabel = "Go home",
+  confetti = false,
   onClose,
 }: PointsPopupProps) {
   const id = useId();
@@ -108,6 +112,7 @@ export function PointsPopup({
           {buttonLabel}
         </button>
       </div>
+      {confetti && <Confetti />}
     </div>,
     document.body,
   );

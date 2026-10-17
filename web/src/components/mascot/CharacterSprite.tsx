@@ -2,7 +2,8 @@
 
 import { levelFor } from "@/lib/sorting-config";
 import { useLevelArt } from "./level-art";
-import type { Outfit } from "./looks";
+import { LevelLayers } from "./LevelLayers";
+import { LEVEL_RIGS, type Outfit } from "./looks";
 import { useShop } from "./outfit-store";
 import { SpriteLayers } from "./SpriteLayers";
 
@@ -13,11 +14,11 @@ export function useLevel(): number {
 }
 
 /**
- * The plant for a level: level 2+ art as one image once it's uploaded (no skins yet), otherwise the
- * layered level-1 plant wearing `outfit`. Returns whether the level art is showing.
+ * The plant for a level: level 2+ art cut into moving parts once it's uploaded (no skins yet),
+ * otherwise the layered level-1 plant wearing `outfit`.
  */
 export function CharacterSprite({ level, outfit }: { level: number; outfit: Outfit }) {
   const art = useLevelArt(level);
-  if (art) return <div className="mascot-part" style={{ backgroundImage: `url(${art})` }} />;
+  if (art) return <LevelLayers rig={LEVEL_RIGS[level]} />;
   return <SpriteLayers outfit={outfit} />;
 }

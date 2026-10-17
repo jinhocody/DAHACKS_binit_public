@@ -35,6 +35,13 @@ export const BINS: Record<WasteCategory, string | null> = {
   uncertain: null,
 };
 
+/** Bin color for each cart in Cupertino (Recology home carts). Shown next to the bin name after a scan. */
+export const BIN_COLORS: Record<BinCategory, string> = {
+  recycling: "Blue",
+  compost: "Green",
+  trash: "Gray (or black)",
+};
+
 export interface HelpLink {
   message: string;
   linkLabel: string;

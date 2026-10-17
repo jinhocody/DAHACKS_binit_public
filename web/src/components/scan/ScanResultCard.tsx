@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BIN_CATEGORIES, type BinCategory, type ScanResult } from "@/lib/scan-types";
-import { HELP, isBinCategory } from "@/lib/sorting-config";
+import { BIN_COLORS, HELP, isBinCategory } from "@/lib/sorting-config";
 import { CATEGORY_STYLES } from "./categories";
 import { VerifyFlow } from "./VerifyFlow";
 
@@ -63,6 +63,17 @@ export function ScanResultCard({ result, photoHash }: { result: ScanResult; phot
         <p className="mt-4 rounded-xl bg-gray-50 p-3 text-base">
           <span className="text-gray-600">Put it in: </span>
           <strong className="break-words">{bin}</strong>
+          {isBinCategory(category) && (
+            <span className="mt-2 flex items-center gap-2 text-sm text-gray-700">
+              <span aria-hidden className={`h-4 w-4 shrink-0 rounded-full ring-1 ring-black/10 ${style.accent}`} />
+              <span>
+                Bin color: <strong>{BIN_COLORS[category]}</strong>
+                <span className="block text-xs text-gray-500">
+                  Cupertino home carts use this color. Public bins may differ — check the label.
+                </span>
+              </span>
+            </span>
+          )}
           {override && <span className="block text-xs text-gray-500">(you picked this, so no points)</span>}
         </p>
       ) : (

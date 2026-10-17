@@ -18,7 +18,7 @@ This is the part we had the most fun with. Your plant levels up at 10 and 20 poi
 
 ## Keeping it fair
 
-Since points are involved, people will try to cheat. Each scan gets a signed ticket and can only pay out once, the same photo can't be reused, verification has to happen within 10 minutes, and there's a daily cap of 50 points. A 7-day streak gets you a +2 bonus, and every 3 days of doing nothing costs you 2.
+Since points are involved, people will try to cheat. You only earn points after proving it: you snap the bin and then your item inside it, and the AI checks both. Each scan gets a signed ticket from our server, so nobody can fake a scan or change its result. A 7-day streak gets you a +2 bonus, and every 3 days of doing nothing costs you 2.
 
 
 ## Built with
@@ -63,7 +63,7 @@ Want it for a different city? Change the rules in those first two files. Nothing
 
 ## What's not done yet
 
-Points live in your browser, so they don't follow you to another device. We'd like to add accounts next, then more cities, and maybe work with Recology on real rewards. Also, juice and soy milk boxes aren't clearly covered by the city's guide, so for now Binit just says "not sure."
+Points live in your browser, so they don't follow you to another device. We'd like to add accounts next, then more cities, and maybe work with Recology on real rewards. Also, juice and soy milk boxes aren't clearly covered by the city's guide, so for now Binit just says "not sure." We also want to stop the same photo from being reused, add a time limit for verifying, and cap points per day.
 
 ## Team
 

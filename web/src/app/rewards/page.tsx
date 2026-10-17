@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PointsSummary } from "@/components/mascot/PointsSummary";
 
 export const metadata: Metadata = {
   title: "Rewards",
-  description: "Earn points for sorting right and redeem rewards — coming soon to SortSnap.",
+  description: "Your SortSnap points: earn them by sorting right. Redeeming rewards is coming soon.",
 };
 
 const PERKS = [
@@ -34,20 +35,12 @@ export default function RewardsPage() {
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-emerald-950">Rewards</h1>
         <p className="mt-2 max-w-xl text-gray-600">
-          Recycling right should feel good. Soon you&apos;ll earn points for every correctly sorted item
-          and redeem them for rewards.
+          Recycling right should feel good. You earn points for every correctly sorted item and can spend
+          them on skins for your plant. Redeeming them for rewards is coming soon.
         </p>
       </header>
 
-      <Card className="flex items-center justify-between gap-4 bg-linear-to-br from-emerald-600 to-teal-700 text-white">
-        <div>
-          <p className="text-sm font-medium text-emerald-100">Your points</p>
-          <p className="text-4xl font-extrabold tracking-tight">0</p>
-        </div>
-        <span aria-hidden="true" className="text-5xl">
-          🏆
-        </span>
-      </Card>
+      <PointsSummary />
 
       <ul className="grid gap-4 sm:grid-cols-3">
         {PERKS.map((perk) => (

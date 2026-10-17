@@ -747,3 +747,177 @@
     animation: none;
   }
 }
+
+/* ================= Happy plant (points popups) ================= */
+
+.mascot-happy {
+  position: relative;
+  width: var(--size);
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  margin-top: 12%; /* room for the dance jumps inside a popup */
+}
+
+.mascot-happy-dancer {
+  position: absolute;
+  inset: 0;
+  animation: mascot-dance 2.6s ease-in-out infinite;
+}
+
+.mascot-happy .mascot-arm {
+  animation: mascot-wave 1.3s ease-in-out infinite;
+}
+
+.mascot-happy .mascot-top {
+  animation: mascot-leafPerk 0.65s ease-in-out infinite;
+}
+
+.mascot-happy .mascot-shadow {
+  animation: mascot-shadowDance 2.6s ease-in-out infinite;
+}
+
+.mascot-happy .mascot-heart {
+  animation-iteration-count: infinite;
+  animation-duration: 2.4s;
+}
+
+/* Square pixel sparkles bursting outwards from the plant. */
+.mascot-sparkle {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 4%;
+  aspect-ratio: 1;
+  background: #facc15;
+  box-shadow:
+    0 -100% 0 0 #fde68a,
+    0 100% 0 0 #fde68a,
+    -100% 0 0 0 #fde68a,
+    100% 0 0 0 #fde68a;
+  opacity: 0;
+  animation: mascot-sparkle 1.6s steps(8) infinite;
+  animation-delay: var(--delay);
+  pointer-events: none;
+}
+
+@keyframes mascot-sparkle {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
+  }
+}
+
+/* ================= Points value (+5 / −2) in popups ================= */
+
+.points-delta {
+  position: relative;
+  isolation: isolate;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.points-delta-value {
+  font-family: var(--font-pixel-small);
+  font-size: 4.5rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 3px 3px 0 rgb(43 68 52 / 0.25);
+  animation: points-pop 0.6s cubic-bezier(0.3, 1.8, 0.5, 1) both;
+  animation-delay: 0.2s;
+}
+
+/* A copy of the number that floats up and fades, like a game score pop. */
+.points-delta-ghost {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  font-family: var(--font-pixel-small);
+  font-size: 4.5rem;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  animation: points-ghost 1.2s ease-out forwards;
+  animation-delay: 1s;
+}
+
+.points-delta-gain {
+  color: #3f7d3a;
+}
+
+.points-delta-loss {
+  color: #b42318;
+}
+
+@keyframes points-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes points-ghost {
+  0% {
+    opacity: 0.8;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -45%) scale(1.5);
+  }
+}
+
+/* Drains while the popup counts down to going home. */
+.popup-timer {
+  height: 6px;
+  width: 100%;
+  margin-top: 0.75rem;
+  background: rgb(43 68 52 / 0.15);
+}
+
+.popup-timer > span {
+  display: block;
+  height: 100%;
+  background: var(--pixel-ink);
+  transform-origin: left;
+  animation: popup-timer var(--duration) steps(20) forwards;
+}
+
+@keyframes popup-timer {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-happy *,
+  .points-delta-value {
+    animation: none !important;
+  }
+  .mascot-sparkle,
+  .points-delta-ghost,
+  .mascot-happy .mascot-heart {
+    display: none;
+  }
+}

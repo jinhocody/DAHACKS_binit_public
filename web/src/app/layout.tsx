@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Geist, Geist_Mono, Pixelify_Sans } from "next/font/google";
+import { Geist, Geist_Mono, Pixelify_Sans, VT323 } from "next/font/google";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { PointsEvents } from "@/components/mascot/PointsEvents";
 import "./globals.css";
 import "./pixel-theme.css";
 
@@ -19,6 +20,13 @@ const geistMono = Geist_Mono({
 // Pixel font for headings, buttons and nav (see pixel-theme.css).
 const pixelify = Pixelify_Sans({
   variable: "--font-pixelify",
+  subsets: ["latin"],
+});
+
+// Finer-grained pixel font for small UI text (buttons, nav, labels), where Pixelify's big pixels blur together.
+const vt323 = VT323({
+  variable: "--font-vt323",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -40,12 +48,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${pixelify.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${pixelify.variable} ${vt323.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:pb-0">
         <Header />
         {/* Shared page container: every route (incl. /scan) renders inside this. */}
         <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 sm:px-6 sm:py-10">{children}</main>
         <Footer />
+        {/* Streak and inactivity popups (and the inactivity check when the app opens). */}
+        <PointsEvents />
       </body>
     </html>
   );

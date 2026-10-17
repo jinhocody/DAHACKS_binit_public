@@ -67,6 +67,12 @@ export const DAILY_POINT_CAP = 50;
 /** Points taken away when the AI is sure the item went in the wrong bin (once per scanned item). */
 export const WRONG_BIN_PENALTY = 1;
 
+/** Habits. An "active" day is a day with at least one verified disposal. */
+export const INACTIVITY_DAYS = 3; // every this many days without one costs INACTIVITY_PENALTY
+export const INACTIVITY_PENALTY = 2;
+export const STREAK_DAYS = 7; // this many active days in a row earns STREAK_BONUS
+export const STREAK_BONUS = 2;
+
 export function isBinCategory(category: WasteCategory): category is BinCategory {
   return (BIN_CATEGORIES as WasteCategory[]).includes(category);
 }

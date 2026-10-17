@@ -3,7 +3,7 @@
 // Per-browser accessory shop: what's owned, what's worn, and how many points were spent.
 // Only reads the points ledger (getPointsTotal); spending is tracked here, so earning is untouched.
 import { useSyncExternalStore } from "react";
-import { getPointsTotal } from "@/components/scan/points-store";
+import { getPointsTotal, POINTS_EVENT } from "@/components/scan/points-store";
 import { ACCESSORIES, ACCESSORY_PRICE, accessoryId, type AccessoryId, type Slot } from "./accessories";
 import { DEFAULT_OUTFIT, type MascotLook, type Outfit } from "./looks";
 
@@ -77,7 +77,7 @@ function getSnapshot(): ShopSnapshot {
 function subscribe(listener: () => void) {
   listeners.add(listener);
   window.addEventListener("storage", listener);
-  // The points ledger doesn't announce changes (e.g. a wrong-bin deduction on the scan page), and
+  window.addEventListener(POINTS_EVENT, listener);
   // Next keeps visited pages alive while hidden. Re-check whenever a component (re)subscribes,
   // which also happens when a kept-alive page is shown again.
   const recheck = setTimeout(listener, 0);
@@ -85,6 +85,7 @@ function subscribe(listener: () => void) {
     clearTimeout(recheck);
     listeners.delete(listener);
     window.removeEventListener("storage", listener);
+    window.removeEventListener(POINTS_EVENT, listener);
   };
 }
 

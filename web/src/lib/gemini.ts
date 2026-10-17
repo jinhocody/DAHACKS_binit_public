@@ -61,7 +61,7 @@ Return:
 - item: short name of the item
 - material: its primary material (include resin code for plastics if visible/likely)
 - category: exactly one of "recycling", "compost", "trash", "special", "uncertain"
-  - recycling = blue cart, compost = green organics cart, trash = gray garbage cart
+  - recycling = recycling bin, compost = compost/organics bin, trash = trash/landfill bin
   - special = needs special handling, never a regular cart
   - uncertain = you cannot decide with confidence
 - reason: one short sentence explaining why
@@ -70,9 +70,9 @@ Return:
 - note: optional one-sentence caveat
 
 Cupertino rules:
-- Recycling (blue): clean, empty plastic bottles and rigid containers, aluminum and steel cans, glass bottles and jars, clean paper, flattened cardboard.
-- Compost (green): food scraps, yard trimmings, greasy or food-soiled paper (e.g. greasy pizza boxes), milk cartons, paper cups, paper plates, paper ice cream containers, paper take-out boxes, paper bags, napkins, paper towels, paper tea bags, waxed cardboard and waxed paper.
-- Trash (gray): chip bags, plastic film and bags, foam, diapers, and ALL bioplastic or "compostable" plastic containers and utensils (these are NOT compost in Cupertino).
+- Recycling: clean, empty plastic bottles and rigid containers, aluminum and steel cans, glass bottles and jars, clean paper, flattened cardboard.
+- Compost: food scraps, yard trimmings, greasy or food-soiled paper (e.g. greasy pizza boxes), milk cartons, paper cups, paper plates, paper ice cream containers, paper take-out boxes, paper bags, napkins, paper towels, paper tea bags, waxed cardboard and waxed paper.
+- Trash: chip bags, plastic film and bags, foam, diapers, and ALL bioplastic or "compostable" plastic containers and utensils (these are NOT compost in Cupertino).
 - Special: batteries, electronics and anything with a cord or circuit board, paint, chemicals, medicine, sharps, fluorescent bulbs, propane. Never put these in recycling, compost or trash.
 - Juice boxes and soy milk boxes: not confirmed yet, always answer "uncertain".
 - Mixed items made of parts that go in different carts (e.g. a coffee cup with a plastic lid): answer "uncertain" and use prepSteps to say where each part goes after separating them.

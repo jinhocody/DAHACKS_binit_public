@@ -1,4 +1,5 @@
 import { AccessoryShop } from "@/components/mascot/AccessoryShop";
+import { ActivityBanner } from "@/components/mascot/ActivityBanner";
 import { HomeMascot } from "@/components/mascot/HomeMascot";
 import { Button } from "@/components/ui/Button";
 import { ScanIcon } from "@/components/pixel/ScanIcon";
@@ -9,6 +10,8 @@ export default function Home() {
       <Button href="/scan" size="lg" className="w-full shadow-md">
         <ScanIcon size={32} /> Scan Item
       </Button>
+
+      <ActivityBanner />
 
       <section
         id="character"

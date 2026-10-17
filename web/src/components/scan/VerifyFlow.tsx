@@ -8,6 +8,7 @@ import { awardVerified, deductWrongBin, hashPhoto, type AwardOutcome, type Penal
 import { ScanIcon } from "@/components/pixel/ScanIcon";
 import { LiveCamera } from "./LiveCamera";
 import { WrongBinPopup } from "@/components/mascot/WrongBinPopup";
+import { PointsPopup } from "@/components/mascot/PointsPopup";
 import { ScanningOverlay } from "./ScanningOverlay";
 
 type Slot = "bin" | "inside";
@@ -43,7 +44,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [award, setAward] = useState<AwardOutcome | null>(null);
   const [penalty, setPenalty] = useState<PenaltyOutcome | null>(null);
-  const [sadDismissedFor, setSadDismissedFor] = useState<VerifyResult | null>(null);
+  const [popupDismissedFor, setPopupDismissedFor] = useState<VerifyResult | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const urlsRef = useRef<string[]>([]);
@@ -81,9 +82,9 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
       if (!data.retryable) setAttempts((n) => n + 1);
       if (data.verified && data.ticketId) {
         const hashes = await Promise.all([hashPhoto(bin.blob), hashPhoto(inside.blob)]);
-        setAward(awardVerified(data.points, data.ticketId, scanPhotoHash ? [scanPhotoHash, ...hashes] : hashes));
+        setAward(awardVerified(data.points, data.ticketId, scanPhotoHash ? [scanPhotoHash, ...hashes] : hashes, { item, category }));
       }
-      setPenalty(data.penalty && data.ticketId ? deductWrongBin(data.penalty, data.ticketId) : null);
+      setPenalty(data.penalty && data.ticketId ? deductWrongBin(data.penalty, data.ticketId, { item, category }) : null);
       setResult(data);
       setStatus("done");
     } catch (err) {
@@ -98,7 +99,13 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
     setStatus("idle");
   }
 
-  // Wrong bin: points were deducted, so this attempt ends; closing the sad-mascot popup goes home.
+  // Points popups (gained or lost) close on their own after the animation, then go home.
+  const closePopup = (dismissed: VerifyResult) => {
+    setPopupDismissedFor(dismissed);
+    router.push("/");
+  };
+
+  // Wrong bin: points were deducted, so this attempt ends; the sad-mascot popup then goes home.
   const wrongBin = Boolean(result?.penalty);
   // Any other failed verdict gets one more try; after that, go home. "AI busy" results don't use up tries.
   const outOfTries = Boolean(
@@ -182,15 +189,29 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
         </>
       )}
 
-      {penalty && result && !result.verified && sadDismissedFor !== result && (
+      {penalty && result && !result.verified && popupDismissedFor !== result && (
         <WrongBinPopup
           removed={penalty.points}
           total={penalty.total}
           correctBin={BINS[category] ?? "right bin"}
-          onClose={() => {
-            setSadDismissedFor(result);
-            router.push("/");
-          }}
+          onClose={() => closePopup(result)}
+        />
+      )}
+
+      {award?.status === "awarded" && result?.verified && popupDismissedFor !== result && (
+        <PointsPopup
+          mood="happy"
+          title="Nice sorting!"
+          message={
+            <>
+              Your {item.toLowerCase()} went in the <strong className="text-slate-900">{BINS[category]}</strong>.
+            </>
+          }
+          delta={award.points}
+          total={award.total}
+          note={award.capped ? `Daily limit reached (${DAILY_POINT_CAP} points).` : undefined}
+          buttonLabel="Yay! Go home"
+          onClose={() => closePopup(result)}
         />
       )}
 
@@ -223,7 +244,7 @@ export function VerifyFlow({ ticket, item, category, points, scanPhotoHash }: Ve
               Total: {penalty.total}
             </p>
           )}
-          {wrongBin && <p className="mt-2 text-xs">Close the message to go back to the home page.</p>}
+          {(wrongBin || award?.status === "awarded") && <p className="mt-2 text-xs">Taking you back to the home page…</p>}
           {outOfTries && <p className="mt-2 text-xs">No tries left — taking you back to the home page…</p>}
           {canRetry && (
             <button

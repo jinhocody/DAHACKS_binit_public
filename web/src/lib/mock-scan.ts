@@ -18,7 +18,7 @@ const CANNED_ITEMS: CannedItem[] = [
     item: "Aluminum soda can",
     material: "Aluminum",
     category: "recycling",
-    reason: "Aluminum cans are accepted in the blue cart.",
+    reason: "Aluminum cans are accepted in the recycling bin.",
     prepSteps: ["Empty it completely", "Rinse out sticky residue"],
     confidence: [0.88, 0.98],
   },

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CategoryBadge } from "@/components/ui/CategoryBadge";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
 import type { WasteCategory } from "@/lib/scan-types";
 
 export const metadata: Metadata = {
@@ -46,9 +47,7 @@ export default function HistoryPage() {
       </Card>
 
       <Card className="flex flex-col items-center gap-3 text-center">
-        <span aria-hidden="true" className="text-4xl">
-          🕘
-        </span>
+        <PixelIcon name="clock" size={48} light="#bae6fd" className="text-emerald-900" />
         <p className="text-gray-700">No scans saved yet. Try your first one now!</p>
         <Button href="/scan">Scan an item</Button>
       </Card>

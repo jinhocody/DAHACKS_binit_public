@@ -29,7 +29,11 @@ export function PointsSummary() {
           <p className="mt-1 text-xs font-semibold">Sort items correctly to get back above 0 and cheer up your plant.</p>
         )}
       </div>
-      <PixelIcon name={negative ? "rain" : "trophy"} size={48} light="transparent" className="text-white" />
+      {negative ? (
+        <PixelIcon name="rain" size={48} light="#dbeafe" shade="#93c5fd" outline="#1e293b" />
+      ) : (
+        <PixelIcon name="trophy" size={48} light="#fcd34d" shade="#d97706" outline="#1f3226" />
+      )}
     </Card>
   );
 }

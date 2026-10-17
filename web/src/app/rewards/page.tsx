@@ -9,19 +9,25 @@ export const metadata: Metadata = {
   description: "Your Snap points: earn them by sorting right. Redeeming rewards is coming soon.",
 };
 
-const PERKS: { icon: PixelIconName; title: string; body: string }[] = [
+// light = main fill, shade = accent (flame core, gift ribbon).
+const PERKS: { icon: PixelIconName; light: string; shade?: string; title: string; body: string }[] = [
   {
     icon: "star",
+    light: "#fcd34d",
     title: "Earn points",
     body: "Get points every time you scan an item and sort it into the right bin.",
   },
   {
     icon: "flame",
+    light: "#fb923c",
+    shade: "#fde047",
     title: "Keep a streak",
     body: "Sort something every day to build streaks and unlock bonus points.",
   },
   {
     icon: "gift",
+    light: "#f87171",
+    shade: "#facc15",
     title: "Redeem rewards",
     body: "Trade points for perks from local eco-friendly partners.",
   },
@@ -47,7 +53,7 @@ export default function RewardsPage() {
         {PERKS.map((perk) => (
           <li key={perk.title}>
             <Card className="h-full">
-              <PixelIcon name={perk.icon} size={32} className="text-emerald-900" />
+              <PixelIcon name={perk.icon} size={32} light={perk.light} shade={perk.shade} className="text-emerald-900" />
               <h2 className="mt-2 text-lg font-bold text-emerald-950">{perk.title}</h2>
               <p className="mt-1 text-sm leading-6 text-gray-600">{perk.body}</p>
             </Card>
